@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사랑소아과 업무관리 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a5f7a;
+    --primary-light: #2980b9;
+    --primary-dark: #0d3d52;
+    --accent: #e74c3c;
+    --accent-soft: #f39c12;
+    --bg: #f0f4f8;
+    --bg-card: #ffffff;
+    --text: #1c2833;
+    --text-muted: #5d6d7e;
+    --border: #d5e8f0;
+    --shadow: 0 2px 12px rgba(26,95,122,0.10);
+    --shadow-hover: 0 6px 24px rgba(26,95,122,0.18);
+    --tab-active: #1a5f7a;
+    --tab-inactive: #eaf3f8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 68px;
+    box-shadow: 0 3px 16px rgba(13,61,82,0.25);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  header .subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 300;
+    margin-left: auto;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Tab Nav ── */
+  .tab-nav {
+    background: #fff;
+    border-bottom: 2px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    box-shadow: 0 1px 6px rgba(26,95,122,0.06);
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    padding: 14px 22px;
+    border: none;
+    background: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    transition: color 0.2s;
+    border-radius: 0;
+  }
+
+  .tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0; right: 0;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px 2px 0 0;
+    transform: scaleX(0);
+    transition: transform 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .tab-btn.active::after { transform: scaleX(1); }
+  .tab-btn:hover { color: var(--primary); }
+
+  /* ── Tab Content ── */
+  .tab-content { display: none; padding: 32px; animation: fadeIn 0.25s ease; }
+  .tab-content.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Section Header ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-badge {
+    background: var(--primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+
+  .section-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--tab-inactive);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── Category Labels ── */
+  .category-group {
+    margin-bottom: 28px;
+  }
+
+  .category-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Button Grid ── */
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  /* ── Lecture Button ── */
+  .lecture-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lecture-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .lecture-btn:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    color: var(--primary-dark);
+  }
+  .lecture-btn:hover::before { opacity: 1; }
+
+  .btn-num {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    background: var(--tab-inactive);
+    color: var(--primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .lecture-btn:hover .btn-num {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  .btn-arrow {
+    font-size: 14px;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    transform: translateX(-4px);
+  }
+  .lecture-btn:hover .btn-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── Coming Soon tabs ── */
+  .coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 32px;
+    color: var(--text-muted);
+    gap: 12px;
+  }
+  .coming-soon .icon { font-size: 48px; opacity: 0.4; }
+  .coming-soon p { font-size: 16px; font-weight: 500; }
+  .coming-soon small { font-size: 13px; opacity: 0.7; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    header { padding: 0 16px; }
+    .tab-nav { padding: 0 8px; }
+    .tab-content { padding: 20px 16px; }
+    .btn-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    header h1 { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-icon">🏥</div>
+  <h1>사랑소아과 업무관리 시스템</h1>
+  <span class="subtitle">Sarang Pediatric Clinic</span>
+</header>
+
+<!-- ── TAB NAV ── -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('tab-lecture', this)">📚 심층강의 교육</button>
+  <button class="tab-btn" onclick="switchTab('tab-tab2', this)">탭 2</button>
+  <button class="tab-btn" onclick="switchTab('tab-tab3', this)">탭 3</button>
+  <button class="tab-btn" onclick="switchTab('tab-tab4', this)">탭 4</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     TAB 1 — 심층강의 교육
+══════════════════════════════════════════════ -->
+<div id="tab-lecture" class="tab-content active">
+  <div class="section-header">
+    <span class="section-badge">LECTURE</span>
+    <h2 class="section-title">심층강의 교육</h2>
+    <span class="section-count">40개 강의</span>
+  </div>
+
+  <!-- 발달 / 성장 -->
+  <div class="category-group">
+    <div class="category-label">발달 · 성장</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1mUc3tFa78j8iqEIrD1Vri4bXusD425dzJgVx9Rrgwnk/edit?usp=sharing" target="_blank">
+        <span class="btn-num">1</span><span class="btn-label">다리모양걸음걸이</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1uSuLphaRz3XYJKZUgvrTI0haGDBt-c8vSs4DUtWniqc/edit?usp=sharing" target="_blank">
+        <span class="btn-num">2</span><span class="btn-label">청력</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1pREUo15PYQy7u3NfLcj5N-Q4JHBVNzp1-6cYsDrYkog/edit?usp=sharing" target="_blank">
+        <span class="btn-num">3</span><span class="btn-label">시력</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1Ip4a8K7nHWvhu0cGjXUGARGQRH7BgxxKcslMhmsl6Ro/edit?usp=sharing" target="_blank">
+        <span class="btn-num">4</span><span class="btn-label">성장</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1JmRPxIDLvSUzyxaTz4I29Jdgnr4r9G9UBly_H0A-gBc/edit?usp=sharing" target="_blank">
+        <span class="btn-num">5</span><span class="btn-label">가슴</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1M3a5H10sqn3x6fOYN5RuQ3Zk9ONJASsQB6aY9ns4i4M/edit?usp=sharing" target="_blank">
+        <span class="btn-num">6</span><span class="btn-label">언어지연</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1VIiyRRCEMSU0IQyYYKjtUM0txZKl6X7x16khejr-3Bc/edit?usp=sharing" target="_blank">
+        <span class="btn-num">7</span><span class="btn-label">머리모양사두</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1dublJBluouJwOoy7RJ6b6mH9lkxOTrBcrXhk2vrNsnc/edit?usp=sharing" target="_blank">
+        <span class="btn-num">8</span><span class="btn-label">딤플</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1w6JDKEpubiR48nv9LcpzINo866Of4fujk8CrP92zpt0/edit?usp=sharing" target="_blank">
+        <span class="btn-num">27</span><span class="btn-label">체중</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 알레르기 / 피부 -->
+  <div class="category-group">
+    <div class="category-label">알레르기 · 피부</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1CIUhkMgEvLXB4X1gEBPZIIRp_ANGr188d7JInzOtv_k/edit?usp=sharing" target="_blank">
+        <span class="btn-num">9</span><span class="btn-label">음식알레르기</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1KZ2ZWAhJmJ35HmyFHG_oUGYHnXKRYzskXlfUN9urGzM/edit?usp=sharing" target="_blank">
+        <span class="btn-num">10</span><span class="btn-label">환경알레르기</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1upx15Fbe8zMv_P5pg6c3226t29Z0LX1uVoVBVo0XgO8/edit?usp=sharing" target="_blank">
+        <span class="btn-num">11</span><span class="btn-label">아토피</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/157scaWMLfdcOmQ7iBSIhNe6g9vBZIbjL5WROU0jtKaI/edit?usp=sharing" target="_blank">
+        <span class="btn-num">14</span><span class="btn-label">양성피부병변</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 소화 / 영양 -->
+  <div class="category-group">
+    <div class="category-label">소화 · 영양</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1pbhOo4CaX-V215ik2QCsyFkWJgp77N6i0s9KFb2D7jg/edit?usp=sharing" target="_blank">
+        <span class="btn-num">12</span><span class="btn-label">변비</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1RWRyNsxgHxf31FKmpRLcKGjw3WIcJoa4cvnxd7iZv1U/edit?usp=sharing" target="_blank">
+        <span class="btn-num">13</span><span class="btn-label">빈혈</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1h8ofrcBXWhsEWXHk8r3cZqQ9TpX2DBfaJNhptcxcq3Q/edit?usp=sharing" target="_blank">
+        <span class="btn-num">21</span><span class="btn-label">영양제</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/15LRh9IrzKHfF2G7apEwS-rE6C-FsC_0kcElAnlZ24BE/edit?usp=sharing" target="_blank">
+        <span class="btn-num">22</span><span class="btn-label">모유수유</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1KjknVdQ8qcl8oAHGcnX7Ak9sAQWTtDqbZnavu2GH0Wk/edit?usp=sharing" target="_blank">
+        <span class="btn-num">28</span><span class="btn-label">이유식</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1WjQq4dSBaNYwWt_cGpmXagNIHr1AaaSk8AfA_5HFfR8/edit?usp=sharing" target="_blank">
+        <span class="btn-num">31</span><span class="btn-label">식사습관</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 영아 돌봄 -->
+  <div class="category-group">
+    <div class="category-label">영아 돌봄</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1fyOYA_hkRwRk8EvblIMUufOwPqBlFIdALUUeldQITS8/edit?usp=sharing" target="_blank">
+        <span class="btn-num">15</span><span class="btn-label">영아산통</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1JmdzFmnV0rINU2gDRkVwbV-Akm6fwGL9IYoIacuLPGg/edit?usp=sharing" target="_blank">
+        <span class="btn-num">16</span><span class="btn-label">배변훈련</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1XetdzBPeYrTiKcY_Gm5JCddaIpmO6j6jhP6-9Q18r9Y/edit?usp=sharing" target="_blank">
+        <span class="btn-num">17</span><span class="btn-label">포경수술</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1rZ7Q8CKlnRurCs8XPJ-MgXxhxi4kO9B2UnDt9_MB1q8/edit?usp=sharing" target="_blank">
+        <span class="btn-num">18</span><span class="btn-label">기저귀분비물</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1pqJGg8UbQbbDztA1a37wx2SQI4gRG_iHN2qbS9V1IBg/edit?usp=sharing" target="_blank">
+        <span class="btn-num">23</span><span class="btn-label">카시트</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1xKlROjAO2PXmWxDZ4Dcwbc9kwkE-YEE6zYyCPV8y5To/edit?usp=sharing" target="_blank">
+        <span class="btn-num">29</span><span class="btn-label">아이재우기</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1yrQgUctb6QvRn35TdXpPiJMeuCjj6SxsJJYePSVKTZk/edit?usp=sharing" target="_blank">
+        <span class="btn-num">30</span><span class="btn-label">치아관리</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 행동 / 발달 -->
+  <div class="category-group">
+    <div class="category-label">행동 · 발달</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/130g8APVdOuoPWxXLCZeCfH4Eb4JKTpERnHO_keytvEQ/edit?usp=sharing" target="_blank">
+        <span class="btn-num">19</span><span class="btn-label">소아자위</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1pF9STNZaKyeZzZj9iWzs5E0wnlD_VyuTqYw6gw6ub7M/edit?usp=sharing" target="_blank">
+        <span class="btn-num">20</span><span class="btn-label">미디어노출</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1Zn74A1C_ynsVmB546TZ23xj9X8jZi4jJxPSW-IGHLNE/edit?usp=sharing" target="_blank">
+        <span class="btn-num">32</span><span class="btn-label">동생</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1opzHuHf6HitCgGCQVZfgb56Pa5YeK1fRKOPJPl8W4DA/edit?usp=sharing" target="_blank">
+        <span class="btn-num">39</span><span class="btn-label">분노발작</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 정신건강 / 신경발달 -->
+  <div class="category-group">
+    <div class="category-label">정신건강 · 신경발달</div>
+    <div class="btn-grid">
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1G5Amu9FtQQOnio_4EwtbzeMkbpRACLuqg4r7Hcw6Rpo/edit?usp=sharing" target="_blank">
+        <span class="btn-num">33</span><span class="btn-label">아동학대</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1Ej_UerMfMvyHXs5xaXs_Pzpho7lUYf_pLZsw0lDcLQc/edit?usp=sharing" target="_blank">
+        <span class="btn-num">34</span><span class="btn-label">우울증</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1Mw0ffTxCFm2Q6YLh06Kmrn_Ntdvxtq31A_v9zZ60Hoo/edit?usp=sharing" target="_blank">
+        <span class="btn-num">35</span><span class="btn-label">외상후스트레스장애</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/19npEOMYC5WGfi5qKnWmMmsYs_DwbAzGA7waSXTk5ODU/edit?usp=sharing" target="_blank">
+        <span class="btn-num">36</span><span class="btn-label">강박장애</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/19npEOMYC5WGfi5qKnWmMmsYs_DwbAzGA7waSXTk5ODU/edit?usp=sharing" target="_blank">
+        <span class="btn-num">37</span><span class="btn-label">ADHD</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/17l8P_qBq2Rfrx20beYO-kRMbryQ0HJUu05yxrfkQuhw/edit?usp=sharing" target="_blank">
+        <span class="btn-num">38</span><span class="btn-label">자폐</span><span class="btn-arrow">→</span>
+      </a>
+      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1KjBMSteiApFzPRgWW-md6OxstqBy2vqU5qF1Vw7MCGA/edit?usp=sharing" target="_blank">
+        <span class="btn-num">40</span><span class="btn-label">산후우울증</span><span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+</div><!-- /tab-lecture -->
+
+<!-- ══ TAB 2 ══ -->
+<div id="tab-tab2" class="tab-content">
+  <div class="coming-soon">
+    <div class="icon">🗂️</div>
+    <p>탭 2</p>
+    <small>준비 중입니다</small>
+  </div>
+</div>
+
+<!-- ══ TAB 3 ══ -->
+<div id="tab-tab3" class="tab-content">
+  <div class="coming-soon">
+    <div class="icon">🗂️</div>
+    <p>탭 3</p>
+    <small>준비 중입니다</small>
+  </div>
+</div>
+
+<!-- ══ TAB 4 ══ -->
+<div id="tab-tab4" class="tab-content">
+  <div class="coming-soon">
+    <div class="icon">🗂️</div>
+    <p>탭 4</p>
+    <small>준비 중입니다</small>
+  </div>
+</div>
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
