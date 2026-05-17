@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SELSI 영·유아 언어발달 검사</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --primary-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f0f4ff;
+    min-height: 100vh;
+    color: var(--slate-800);
+  }
+
+  /* ── 레이아웃 ── */
+  .app-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+    color: white;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(37,99,235,0.25);
+  }
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .header-title { font-size: 17px; font-weight: 700; }
+  .header-sub { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+
+  .main { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  /* ── 스텝 인디케이터 ── */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    background: white;
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    align-items: center;
+    justify-content: center;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .step-circle {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+    background: var(--slate-200);
+    color: var(--slate-500);
+    transition: all 0.25s;
+    flex-shrink: 0;
+  }
+  .step-item.active .step-circle { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.35); }
+  .step-item.done .step-circle { background: var(--green); color: white; }
+  .step-label { font-size: 13px; font-weight: 600; color: var(--slate-400); white-space: nowrap; }
+  .step-item.active .step-label { color: var(--primary); }
+  .step-item.done .step-label { color: var(--green); }
+  .step-divider { width: 32px; height: 2px; background: var(--slate-200); margin: 0 4px; flex-shrink: 0; }
+  .step-divider.done { background: var(--green); }
+
+  /* ── 카드 ── */
+  .card {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    padding: 28px;
+  }
+  .card-title {
+    font-size: 20px; font-weight: 800; color: var(--slate-900);
+    margin-bottom: 6px;
+  }
+  .card-sub { font-size: 13px; color: var(--slate-500); margin-bottom: 24px; line-height: 1.6; }
+
+  /* ── 폼 ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 13px; font-weight: 600; color: var(--slate-600); }
+  input, select {
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--slate-200);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--slate-800);
+    background: var(--slate-50);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--primary); background: white; }
+
+  .radio-group { display: flex; gap: 10px; }
+  .radio-btn {
+    flex: 1; padding: 11px; border-radius: 10px;
+    border: 1.5px solid var(--slate-200);
+    background: var(--slate-50); color: var(--slate-600);
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .radio-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+  .age-chip {
+    background: var(--green-light); border: 1px solid #bbf7d0;
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 14px; color: var(--green); font-weight: 600;
+    text-align: center; margin-top: 4px;
+  }
+
+  /* ── 버튼 ── */
+  .btn-row { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-primary {
+    flex: 1; padding: 13px 24px;
+    background: linear-gradient(135deg, var(--primary), #1d4ed8);
+    color: white; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    padding: 13px 20px;
+    background: var(--slate-100); color: var(--slate-600);
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--slate-200); }
+  .btn-green {
+    flex: 1; padding: 13px 24px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+    transition: all 0.2s;
+  }
+  .btn-green:hover { transform: translateY(-1px); }
+
+  /* ── 검사 화면 ── */
+  .progress-bar-wrap { margin-bottom: 20px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--slate-500); margin-bottom: 6px; }
+  .progress-bar { height: 7px; background: var(--slate-200); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #22c55e); border-radius: 99px; transition: width 0.4s; }
+
+  .lang-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .lang-tab {
+    flex: 1; padding: 11px;
+    border-radius: 12px; border: 1.5px solid var(--slate-200);
+    background: var(--slate-50); color: var(--slate-500);
+    font-size: 14px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .lang-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+
+  .age-group-scroll { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+  .age-group-scroll::-webkit-scrollbar { height: 3px; }
+  .age-group-btn {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 12px; border-radius: 10px;
+    border: 1.5px solid var(--slate-200); background: var(--slate-50);
+    color: var(--slate-500); font-family: inherit; cursor: pointer;
+    white-space: nowrap; gap: 3px; min-width: 78px; transition: all 0.2s;
+  }
+  .age-group-btn .ag-label { font-size: 12px; font-weight: 600; }
+  .age-group-btn .ag-prog { font-size: 11px; opacity: 0.75; }
+  .age-group-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+  .age-group-btn.done { background: var(--green-light); border-color: #86efac; color: var(--green); }
+
+  .items-list { display: flex; flex-direction: column; gap: 7px; padding-right: 4px; }
+
+  /* 수용/표현 구분 배너 */
+  .section-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: white; border-radius: 14px; padding: 16px 20px;
+    margin: 8px 0 4px; font-weight: 800; font-size: 16px;
+    box-shadow: 0 3px 12px rgba(37,99,235,0.25);
+  }
+  .section-banner .banner-icon { font-size: 26px; }
+  .section-banner .banner-sub { font-size: 12px; font-weight: 400; opacity: 0.85; margin-top: 2px; }
+  .section-banner.expressive { background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 3px 12px rgba(5,150,105,0.25); }
+
+  .item-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 13px 15px; border-radius: 11px;
+    border: 1.5px solid var(--slate-200); background: var(--slate-50);
+    transition: all 0.15s; user-select: none;
+  }
+  .item-row.pass { background: var(--green-light); border-color: #86efac; }
+  .item-row.fail { background: #fef2f2; border-color: #fca5a5; }
+
+  .item-content { flex: 1; }
+  .item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .item-id { font-size: 10px; font-weight: 700; color: var(--slate-400); background: var(--slate-100); padding: 2px 6px; border-radius: 4px; }
+  .item-age-tag { font-size: 10px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 2px 7px; border-radius: 4px; }
+  .item-text { font-size: 14px; color: var(--slate-800); line-height: 1.55; margin-bottom: 10px; }
+  .item-note { font-size: 11px; color: var(--slate-400); margin-top: 3px; line-height: 1.4; }
+
+  /* 가능/불가능 버튼 */
+  .ans-btns { display: flex; gap: 8px; margin-top: 4px; }
+  .ans-btn {
+    flex: 1; padding: 8px 6px; border-radius: 8px; border: 1.5px solid var(--slate-200);
+    font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+    background: white; color: var(--slate-400); transition: all 0.15s;
+  }
+  .ans-btn.pass-btn { border-color: #86efac; color: #15803d; background: #f0fdf4; }
+  .ans-btn.pass-btn.active { background: #16a34a; color: white; border-color: #16a34a; box-shadow: 0 2px 8px rgba(22,163,74,0.3); }
+  .ans-btn.fail-btn { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+  .ans-btn.fail-btn.active { background: #dc2626; color: white; border-color: #dc2626; box-shadow: 0 2px 8px rgba(220,38,38,0.25); }
+
+  /* ── 결과 화면 ── */
+  .result-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--slate-50); border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 20px;
+  }
+  .result-name { font-size: 18px; font-weight: 800; color: var(--slate-900); }
+  .result-info { font-size: 12px; color: var(--slate-500); margin-top: 2px; }
+  .result-age-badge {
+    background: var(--primary-light); color: var(--primary);
+    border-radius: 10px; padding: 8px 16px;
+    font-size: 14px; font-weight: 700; text-align: center;
+  }
+
+  .score-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .score-card {
+    border-radius: 14px; padding: 18px;
+    border: 1.5px solid transparent;
+  }
+  .score-card.normal { background: var(--green-light); border-color: #86efac; }
+  .score-card.mild { background: var(--amber-light); border-color: #fde68a; }
+  .score-card.delay { background: var(--red-light); border-color: #fca5a5; }
+
+  .sc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .sc-title { font-size: 14px; font-weight: 800; color: var(--slate-900); }
+  .sc-badge { border-radius: 7px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: white; }
+  .sc-badge.normal { background: var(--green); }
+  .sc-badge.mild { background: var(--amber); }
+  .sc-badge.delay { background: var(--red); }
+
+  .sc-nums { display: flex; gap: 6px; margin-bottom: 12px; }
+  .sc-num { flex: 1; text-align: center; background: rgba(255,255,255,0.7); border-radius: 9px; padding: 10px 4px; }
+  .sc-val { font-size: 22px; font-weight: 900; line-height: 1; }
+  .sc-unit { font-size: 12px; color: var(--slate-500); margin-left: 1px; }
+  .sc-key { font-size: 10px; color: var(--slate-400); font-weight: 600; margin-top: 4px; }
+
+  .sc-bar-bg { height: 7px; background: rgba(0,0,0,0.08); border-radius: 99px; overflow: hidden; }
+  .sc-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s; }
+  .normal .sc-bar-fill { background: var(--green); }
+  .mild .sc-bar-fill { background: var(--amber); }
+  .delay .sc-bar-fill { background: var(--red); }
+
+  /* 프로파일 차트 */
+  .profile-section { margin-bottom: 20px; }
+  .section-title { font-size: 15px; font-weight: 800; color: var(--slate-900); margin-bottom: 12px; }
+  .profile-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .profile-table th { background: var(--slate-100); padding: 8px 12px; text-align: left; font-weight: 700; color: var(--slate-600); }
+  .profile-table td { padding: 9px 12px; border-bottom: 1px solid var(--slate-100); color: var(--slate-700); }
+  .profile-table tr:last-child td { border-bottom: none; }
+  .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .pct-bar-bg { flex: 1; height: 6px; background: var(--slate-200); border-radius: 99px; overflow: hidden; }
+  .pct-bar-fill { height: 100%; border-radius: 99px; }
+
+  /* 소견 */
+  .opinion-box {
+    background: #f8fafc; border-radius: 14px;
+    padding: 18px 20px; margin-bottom: 20px;
+    border-left: 4px solid var(--primary);
+  }
+  .opinion-title { font-size: 15px; font-weight: 800; color: var(--slate-900); margin-bottom: 10px; }
+  .opinion-text { font-size: 13px; color: var(--slate-600); line-height: 1.8; }
+  .opinion-warn { font-size: 12px; color: var(--slate-400); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--slate-200); }
+
+  .result-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── 반응형 ── */
+  @media (max-width: 580px) {
+    .score-cards { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    .steps { gap: 0; padding: 12px; }
+    .step-label { display: none; }
+    .step-divider { width: 20px; }
+    .card { padding: 20px 16px; }
+  }
+
+  /* ── 인트로 ── */
+  .intro-hero {
+    text-align: center; padding: 20px 0 28px;
+  }
+  .intro-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white; border-radius: 12px;
+    padding: 10px 26px; font-size: 28px; font-weight: 900;
+    letter-spacing: 3px; margin-bottom: 18px;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+  }
+  .intro-title { font-size: 26px; font-weight: 900; color: var(--slate-900); margin-bottom: 6px; }
+  .intro-en { font-size: 13px; color: var(--slate-400); margin-bottom: 28px; }
+
+  .intro-features {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 28px;
+  }
+  .intro-feat {
+    background: white; border-radius: 14px;
+    padding: 18px 14px; text-align: center;
+    border: 1.5px solid var(--slate-200);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
+  .feat-icon { font-size: 26px; margin-bottom: 8px; }
+  .feat-label { font-size: 12px; font-weight: 700; color: var(--slate-700); }
+  .feat-sub { font-size: 11px; color: var(--slate-400); margin-top: 3px; }
+
+  .intro-note {
+    background: var(--amber-light); border: 1px solid #fde68a;
+    border-radius: 12px; padding: 12px 16px;
+    font-size: 12px; color: #92400e; line-height: 1.7; margin-bottom: 24px;
+  }
+
+  @media (max-width: 480px) {
+    .intro-features { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── 검사 진행 방식 선택 버튼 ── */
+  .exam-mode-btns {
+    display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;
+  }
+  .exam-mode-btn {
+    flex: 1; min-width: 120px;
+    padding: 14px 10px;
+    border-radius: 14px; border: 2px solid var(--slate-200);
+    background: var(--slate-50); color: var(--slate-700);
+    font-size: 14px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .exam-mode-btn .mode-icon { font-size: 24px; }
+  .exam-mode-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(37,99,235,0.18); }
+  .exam-mode-btn.link-btn { border-color: #6366f1; color: #4338ca; background: #eef2ff; }
+  .exam-mode-btn.link-btn:hover { background: #6366f1; color: white; }
+  .exam-mode-btn.qr-btn { border-color: #0891b2; color: #0e7490; background: #ecfeff; }
+  .exam-mode-btn.qr-btn:hover { background: #0891b2; color: white; }
+  .exam-mode-btn.direct-btn { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .exam-mode-btn.direct-btn:hover { background: var(--primary); color: white; }
+  .exam-mode-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  /* ── 모달 오버레이 ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 9999;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: white; border-radius: 20px;
+    max-width: 560px; width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    overflow: hidden; animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity:0; transform: scale(0.93) translateY(12px); }
+    to   { opacity:1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: white; padding: 18px 22px 16px;
+  }
+  .modal-header-title { font-size: 17px; font-weight: 800; margin-bottom: 2px; }
+  .modal-header-sub { font-size: 12px; opacity: 0.8; }
+  .modal-body { padding: 20px 22px 24px; }
+  .modal-guide-text {
+    font-size: 14px; line-height: 1.85; color: var(--slate-700);
+    background: var(--slate-50); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 16px;
+    border-left: 4px solid var(--primary);
+  }
+  .modal-guide-text strong { color: var(--slate-900); }
+  .modal-criteria {
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+  }
+  .modal-criteria-title { font-size: 13px; font-weight: 800; color: #15803d; margin-bottom: 10px; }
+  .modal-criteria ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .modal-criteria ul li { font-size: 13px; color: #166534; line-height: 1.6; }
+  .modal-criteria ul li::before { content: "✔ "; font-weight: 700; }
+  .modal-example {
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
+  }
+  .modal-example-title { font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 10px; }
+  .modal-example ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 7px; }
+  .modal-example ul li { font-size: 12px; color: #78350f; line-height: 1.6; }
+  .modal-btn-ok {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--primary), #1d4ed8);
+    color: white; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 800; font-family: inherit;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    transition: all 0.2s;
+  }
+  .modal-btn-ok:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+
+  /* 36개월 초과 경고 */
+  .age-chip.over-age {
+    background: #fef2f2; border-color: #fca5a5; color: var(--red);
+  }
+
+  /* ── 상단 탭 (검사 / 결과조회) ── */
+  .main-tabs {
+    display: flex; gap: 0; margin-bottom: 20px;
+    background: white; border-radius: 14px;
+    overflow: hidden; box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  }
+  .main-tab {
+    flex: 1; padding: 14px 10px;
+    border: none; background: white; color: var(--slate-500);
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+  }
+  .main-tab.active {
+    color: var(--primary); border-bottom-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .main-tab:hover:not(.active) { background: var(--slate-50); }
+
+  /* ── 결과 조회 카드 ── */
+  .result-list-card { background: white; border-radius: 18px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); padding: 24px; }
+  .result-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .result-list-title { font-size: 18px; font-weight: 800; color: var(--slate-900); }
+  .btn-refresh {
+    padding: 8px 16px; background: var(--primary-light); color: var(--primary);
+    border: 1.5px solid var(--primary); border-radius: 10px;
+    font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-refresh:hover { background: var(--primary); color: white; }
+  .session-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px;
+    border: 1.5px solid var(--slate-200); background: var(--slate-50);
+    margin-bottom: 10px; cursor: pointer; transition: all 0.18s;
+  }
+  .session-row:hover { border-color: var(--primary); background: var(--primary-light); }
+  .session-row.completed { border-color: #86efac; background: var(--green-light); }
+  .session-row.pending { border-color: #fde68a; background: #fffbeb; }
+  .session-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .session-avatar.completed { background: #dcfce7; }
+  .session-avatar.pending   { background: #fef9c3; }
+  .session-info { flex: 1; }
+  .session-name { font-size: 15px; font-weight: 800; color: var(--slate-900); }
+  .session-meta { font-size: 12px; color: var(--slate-500); margin-top: 2px; }
+  .session-badge {
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .session-badge.completed { background: var(--green); color: white; }
+  .session-badge.pending   { background: #d97706; color: white; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--slate-400); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-logo">SELSI</div>
+    <div>
+      <div class="header-title">영·유아 언어발달 검사</div>
+      <div class="header-sub">Sequenced Language Scale for Infants</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── 상단 메인 탭 ── -->
+  <div class="main-tabs">
+    <button class="main-tab active" id="tab-exam-btn" onclick="switchMainTab('exam')">
+      📝 검사
+    </button>
+    <button class="main-tab" id="tab-results-btn" onclick="switchMainTab('results')">
+      📋 결과 조회
+    </button>
+  </div>
+
+  <!-- ══ 검사 탭 패널 ══ -->
+  <div id="panel-exam">
+
+    <!-- 스텝 인디케이터 -->
+    <div class="steps" id="stepBar">
+      <div class="step-item active" id="step1-ind" onclick="goStep(1)">
+        <div class="step-circle">1</div>
+        <div class="step-label">아동 정보</div>
+      </div>
+      <div class="step-divider" id="div1"></div>
+      <div class="step-item" id="step2-ind" onclick="goStep(2)">
+        <div class="step-circle">2</div>
+        <div class="step-label">검사 실시</div>
+      </div>
+      <div class="step-divider" id="div2"></div>
+      <div class="step-item" id="step3-ind" onclick="goStep(3)">
+        <div class="step-circle">3</div>
+        <div class="step-label">결과 확인</div>
+      </div>
+    </div>
+
+    <!-- 인트로 -->
+    <div id="page-intro" class="card">
+      <div class="intro-hero">
+        <div class="intro-badge">SELSI</div>
+        <div class="intro-title">영·유아 언어발달 검사</div>
+        <div class="intro-en">Sequenced Language Scale for Infants</div>
+        <div class="intro-features">
+          <div class="intro-feat"><div class="feat-icon">🎧</div><div class="feat-label">수용언어</div><div class="feat-sub">56문항</div></div>
+          <div class="intro-feat"><div class="feat-icon">🗣️</div><div class="feat-label">표현언어</div><div class="feat-sub">56문항</div></div>
+          <div class="intro-feat"><div class="feat-icon">📊</div><div class="feat-label">등가월령 산출</div><div class="feat-sub">자동 계산</div></div>
+          <div class="intro-feat"><div class="feat-icon">📋</div><div class="feat-label">PDF 결과지</div><div class="feat-sub">즉시 출력</div></div>
+          <div class="intro-feat"><div class="feat-icon">👶</div><div class="feat-label">적용 연령</div><div class="feat-sub">0 ~ 36개월</div></div>
+          <div class="intro-feat"><div class="feat-icon">🏥</div><div class="feat-label">언어치료</div><div class="feat-sub">임상 보조 도구</div></div>
+        </div>
+        <div class="intro-note">
+          ⚠️ 본 앱은 SELSI(김영태·김경희, 2004) 검사 구조를 기반으로 한 <strong>교육·참고용</strong> 도구입니다.<br>
+          임상적 진단은 반드시 자격을 갖춘 언어치료사의 전문 평가가 필요합니다.
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(1)">검사 시작하기 →</button>
+    </div>
+
+    <!-- 1단계: 아동 정보 -->
+    <div id="page-1" class="card" style="display:none">
+      <div class="card-title">👶 아동 정보 입력</div>
+      <div class="card-sub">검사 대상 아동의 기본 정보를 입력해 주세요. 생년월일로 생활연령을 자동 계산합니다.</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>아동 이름 *</label>
+          <input type="text" id="childName" placeholder="예: 홍길동" oninput="updateAgeChip()">
+        </div>
+        <div class="form-group">
+          <label>출생 연도 *</label>
+          <select id="birthYear" onchange="updateAgeChip()">
+            <option value="">연도 선택</option>
+            <option value="2023">2023년</option>
+            <option value="2024">2024년</option>
+            <option value="2025">2025년</option>
+            <option value="2026">2026년</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>출생 월 *</label>
+          <select id="birthMonth" onchange="updateAgeChip()">
+            <option value="">월 선택</option>
+            <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+            <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+            <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+            <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>성별 *</label>
+          <div class="radio-group">
+            <button class="radio-btn" id="btn-male" onclick="selectGender('남아')">남아</button>
+            <button class="radio-btn" id="btn-female" onclick="selectGender('여아')">여아</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>검사자</label>
+          <input type="text" id="examiner" placeholder="검사자 이름 (선택)">
+        </div>
+        <div class="form-group full">
+          <label>검사일</label>
+          <input type="date" id="examDate">
+        </div>
+      </div>
+      <div id="ageChip" style="display:none" class="age-chip"></div>
+      <div id="age-over-msg" style="display:none;margin-top:12px;
+        background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;
+        padding:14px 18px;font-size:14px;color:#dc2626;font-weight:600;line-height:1.7;text-align:center;">
+        ⛔ SELSI 검사는 <strong>0~36개월</strong> 아동을 대상으로 합니다.<br>
+        현재 입력한 생활연령이 <strong>36개월을 초과</strong>하여 검사를 진행할 수 없습니다.
+      </div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn-secondary" onclick="showIntro()">← 처음으로</button>
+      </div>
+      <div class="exam-mode-btns">
+        <button class="exam-mode-btn link-btn" id="btn-link-exam" onclick="startExam('link')" disabled>
+          <span class="mode-icon">🔗</span><span>링크검사</span>
+        </button>
+        <button class="exam-mode-btn qr-btn" id="btn-qr-exam" onclick="startExam('qr')" disabled>
+          <span class="mode-icon">📷</span><span>QR검사</span>
+        </button>
+        <button class="exam-mode-btn direct-btn" id="btn-direct-exam" onclick="startExam('direct')" disabled>
+          <span class="mode-icon">▶️</span><span>바로검사</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2단계: 검사 실시 -->
+    <div id="page-2" class="card" style="display:none">
+      <div class="card-title">📝 검사 실시</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-meta">
+          <span id="progText">0 / 112 문항 완료</span>
+          <span id="progPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+      <div id="allItemsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div style="margin-top:20px;">
+        <button class="btn-secondary" onclick="goStep(1)" style="margin-bottom:10px;">← 이전</button>
+        <button class="btn-primary" id="btn-to-result" onclick="goResult()" disabled style="width:100%;">결과 보기 →</button>
+        <div id="incomplete-msg" style="display:none;margin-top:10px;text-align:center;
+          background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 14px;
+          font-size:13px;color:#c2410c;font-weight:600;">
+          ⚠️ 아직 <span id="remaining-count"></span>개 문항이 남아있습니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3단계: 결과 -->
+    <div id="page-3" class="card" style="display:none">
+      <div class="card-title">📊 검사 결과</div>
+      <div id="resultContent"></div>
+      <div class="result-btns">
+        <button class="btn-secondary" onclick="goStep(2)">← 검사 수정</button>
+        <button class="btn-green" onclick="downloadPDF()">📄 PDF 결과지 저장</button>
+        <button class="btn-secondary" onclick="showResultQR()" style="background:#6366f1;color:white;border-color:#6366f1;">📲 결과 QR 공유</button>
+        <button class="btn-secondary" onclick="resetAll()" style="background:#fef2f2;color:#dc2626">🔄 새 검사</button>
+      </div>
+    </div>
+
+  </div><!-- /panel-exam -->
+
+  <!-- ══ 결과 조회 탭 패널 ══ -->
+  <div id="panel-results" style="display:none">
+    <div class="result-list-card">
+      <div class="result-list-header">
+        <div class="result-list-title">📋 검사 결과 조회</div>
+        <button class="btn-refresh" onclick="loadSessionList()">🔄 새로고침</button>
+      </div>
+
+      <!-- 필터 -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn-refresh" id="filter-all" onclick="setFilter('all')"
+          style="background:var(--primary);color:white;border-color:var(--primary);">전체</button>
+        <button class="btn-refresh" id="filter-completed" onclick="setFilter('completed')">✅ 완료</button>
+        <button class="btn-refresh" id="filter-pending"   onclick="setFilter('pending')">⏳ 검사중</button>
+      </div>
+
+      <div id="session-list">
+        <div class="empty-state">🔄 목록을 불러오는 중...</div>
+      </div>
+    </div>
+  </div><!-- /panel-results -->
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SELSI 전체 표준 문항 데이터
+// 출처: 김영태·김경희(2004), SELSI 검사 구조 기반
+// 수용언어 56문항 + 표현언어 56문항 = 총 112문항
+// ══════════════════════════════════════════════════════════════════
+const ITEMS = {
+  receptive: [
+    // 0~2개월
+    { id:"R01", ag:"0-5", mo:1, text:"갑작스러운 큰 소리에 반응한다 (눈 깜빡임, 울음, 움직임 멈춤 등)", note:"청각 반사 반응" },
+    { id:"R02", ag:"0-5", mo:2, text:"말소리가 나는 방향으로 눈을 돌린다", note:"음원 추적" },
+    { id:"R03", ag:"0-5", mo:2, text:"친숙한 목소리를 들으면 활동이 증가하거나 조용해진다", note:"변별 반응" },
+    { id:"R04", ag:"0-5", mo:3, text:"목소리에 미소로 반응한다", note:"사회적 반응" },
+    { id:"R05", ag:"0-5", mo:4, text:"자신의 이름을 부르면 반응한다 (고개 돌리기, 미소 등)", note:"이름 변별" },
+    { id:"R06", ag:"0-5", mo:5, text:"낯선 목소리와 친숙한 목소리를 구분하여 다르게 반응한다", note:"화자 변별" },
+    // 6~11개월
+    { id:"R07", ag:"6-11", mo:6, text:"'안 돼'에 일시적으로 행동을 멈춘다", note:"금지어 이해" },
+    { id:"R08", ag:"6-11", mo:7, text:"'빠이빠이', '짝짜꿍' 등 간단한 몸짓 지시에 반응한다", note:"관습적 몸짓 이해" },
+    { id:"R09", ag:"6-11", mo:7, text:"친숙한 물건의 이름을 들으면 해당 물건을 바라본다", note:"사물 이름 이해" },
+    { id:"R10", ag:"6-11", mo:8, text:"'주세요'라는 말에 물건을 건넨다", note:"단순 요청 이해" },
+    { id:"R11", ag:"6-11", mo:9, text:"사람 이름을 들으면 그 사람을 바라본다 (엄마, 아빠 등)", note:"사람 이름 이해" },
+    { id:"R12", ag:"6-11", mo:10, text:"친숙한 장난감 중에서 이름을 말하면 해당 장난감을 가리킨다", note:"1단어 이해 (사물)" },
+    { id:"R13", ag:"6-11", mo:11, text:"1단계 간단한 지시를 따른다 ('공 가져와', '신발 줘')", note:"1단계 지시 이해" },
+    // 12~17개월
+    { id:"R14", ag:"12-17", mo:12, text:"친숙한 사물 5개 이상의 이름을 알고 가리킨다", note:"수용어휘 5+" },
+    { id:"R15", ag:"12-17", mo:12, text:"신체 부위 2~3개를 가리킨다 (눈, 코, 입 등)", note:"신체 부위 이해" },
+    { id:"R16", ag:"12-17", mo:13, text:"그림책에서 친숙한 사물 그림을 가리킨다", note:"그림 이해" },
+    { id:"R17", ag:"12-17", mo:14, text:"'위에 올려봐', '가져다 줘' 등 간단한 행동 지시를 이해한다", note:"행동 동사 이해" },
+    { id:"R18", ag:"12-17", mo:15, text:"2단계 지시를 수행한다 ('신발 가져다가 바구니에 넣어')", note:"2단계 지시" },
+    { id:"R19", ag:"12-17", mo:15, text:"신체 부위 5개 이상을 가리킨다", note:"신체 부위 5+" },
+    { id:"R20", ag:"12-17", mo:16, text:"'크다/작다' 대립 개념을 이해한다", note:"대립 개념" },
+    { id:"R21", ag:"12-17", mo:17, text:"그림책에서 행동 장면을 가리킨다 ('먹고 있는 것 어디야?')", note:"행동 그림 이해" },
+    // 18~23개월
+    { id:"R22", ag:"18-23", mo:18, text:"장소 개념을 이해한다 (위, 아래, 안, 밖)", note:"전치사/위치 이해" },
+    { id:"R23", ag:"18-23", mo:18, text:"친숙한 형용사 2~3개를 이해한다 (뜨겁다, 차갑다, 무겁다)", note:"형용사 이해" },
+    { id:"R24", ag:"18-23", mo:19, text:"소유 개념을 이해한다 ('엄마 것', '내 것', '아빠 것')", note:"소유격 이해" },
+    { id:"R25", ag:"18-23", mo:20, text:"3단계 지시를 수행한다", note:"3단계 지시" },
+    { id:"R26", ag:"18-23", mo:21, text:"그림책에서 범주별 그림을 분류한다 (동물, 음식 등)", note:"범주 이해" },
+    { id:"R27", ag:"18-23", mo:22, text:"'앞/뒤' 개념을 이해한다", note:"공간 관계 이해" },
+    { id:"R28", ag:"18-23", mo:23, text:"사물의 기능에 대한 질문을 이해한다 ('먹는 것이 어디야?')", note:"기능 이해" },
+    // 24~29개월
+    { id:"R29", ag:"24-29", mo:24, text:"기본 색깔 이름 1~2개를 이해한다 (빨강, 파랑)", note:"색깔 개념" },
+    { id:"R30", ag:"24-29", mo:24, text:"'같다/다르다' 개념을 이해한다", note:"동일성 개념" },
+    { id:"R31", ag:"24-29", mo:25, text:"'하나/둘' 수 개념을 이해한다", note:"수 개념" },
+    { id:"R32", ag:"24-29", mo:26, text:"'예/아니오'로 답하는 간단한 질문을 이해한다", note:"예/아니오 질문" },
+    { id:"R33", ag:"24-29", mo:27, text:"4단계 이상의 지시를 수행한다", note:"4단계 지시" },
+    { id:"R34", ag:"24-29", mo:28, text:"간단한 이야기를 듣고 주요 내용을 이해한다 (누가, 무엇을)", note:"이야기 이해" },
+    { id:"R35", ag:"24-29", mo:29, text:"반의어 개념을 이해한다 (크다↔작다, 빠르다↔느리다)", note:"반의어" },
+    // 30~36개월
+    { id:"R36", ag:"30-36", mo:30, text:"기본 색깔 3~4가지를 정확히 이해한다", note:"색깔 3~4가지" },
+    { id:"R37", ag:"30-36", mo:30, text:"'처음/마지막' 개념을 이해한다", note:"순서 개념" },
+    { id:"R38", ag:"30-36", mo:31, text:"'어제/오늘/내일' 시간 개념을 이해한다", note:"시간 개념" },
+    { id:"R39", ag:"30-36", mo:32, text:"간단한 유추 질문을 이해한다 ('배고프면 어떻게 해?')", note:"인과 이해" },
+    { id:"R40", ag:"30-36", mo:33, text:"이야기 속 인과관계를 이해한다", note:"인과 관계" },
+    { id:"R41", ag:"30-36", mo:34, text:"복잡한 관계절을 포함한 문장을 이해한다", note:"복문 이해" },
+    { id:"R42", ag:"30-36", mo:35, text:"숫자 1~5까지의 수 개념을 이해한다", note:"수 개념 확장" },
+    { id:"R43", ag:"30-36", mo:36, text:"추상적 개념을 포함한 질문을 이해한다 (왜? 어떻게?)", note:"추상 이해" },
+    // 추가 심화 문항 (전체 56문항 맞추기)
+    { id:"R44", ag:"0-5", mo:3, text:"다른 아이의 울음소리에 자신도 울음으로 반응한다", note:"사회적 참조" },
+    { id:"R45", ag:"6-11", mo:8, text:"'안녕' 손 흔들기 제스처를 이해한다", note:"제스처 이해" },
+    { id:"R46", ag:"12-17", mo:13, text:"'앉아', '일어나' 등 자세 지시를 이해한다", note:"자세 동사" },
+    { id:"R47", ag:"18-23", mo:20, text:"'더', '없어' 의미를 이해한다", note:"양적 개념" },
+    { id:"R48", ag:"24-29", mo:25, text:"'많다/적다' 양 개념을 이해한다", note:"양 개념" },
+    { id:"R49", ag:"30-36", mo:31, text:"'길다/짧다', '높다/낮다'를 이해한다", note:"치수 개념" },
+    { id:"R50", ag:"6-11", mo:9, text:"억양의 차이(질문 vs 명령)를 변별한다", note:"억양 변별" },
+    { id:"R51", ag:"12-17", mo:14, text:"주변 환경의 소리를 변별한다 (전화벨, 초인종 등)", note:"환경음 변별" },
+    { id:"R52", ag:"18-23", mo:19, text:"그림에서 빠진 부분을 인식한다 (귀 없는 토끼 등)", note:"부분-전체 이해" },
+    { id:"R53", ag:"24-29", mo:26, text:"간단한 이야기 후 그림 순서를 이해한다 (2장 순서)", note:"순서 이해" },
+    { id:"R54", ag:"30-36", mo:32, text:"날씨/계절 관련 어휘를 이해한다", note:"환경 개념" },
+    { id:"R55", ag:"30-36", mo:34, text:"비교급 표현을 이해한다 ('더 크다', '제일 작다')", note:"비교 이해" },
+    { id:"R56", ag:"30-36", mo:36, text:"이야기 후 '왜?'에 관한 질문에 적절한 그림을 고른다", note:"추론 이해" },
+  ],
+  expressive: [
+    // 0~5개월
+    { id:"E01", ag:"0-5", mo:1, text:"울음으로 불쾌감, 배고픔 등 불편함을 표현한다", note:"반사적 발성" },
+    { id:"E02", ag:"0-5", mo:2, text:"쿠잉(cooing) 소리를 낸다 (아~, 우~ 등 모음 위주)", note:"쿠잉" },
+    { id:"E03", ag:"0-5", mo:3, text:"사람 얼굴을 보고 미소를 짓거나 소리를 낸다", note:"사회적 미소+발성" },
+    { id:"E04", ag:"0-5", mo:3, text:"웃음소리를 낸다 (낄낄, 까르르)", note:"웃음 발성" },
+    { id:"E05", ag:"0-5", mo:4, text:"다양한 모음 조합 소리를 낸다 (아이, 애우 등)", note:"모음 다양화" },
+    { id:"E06", ag:"0-5", mo:5, text:"자음을 포함한 소리를 내기 시작한다 (바, 마, 다 등)", note:"초기 자음 발성" },
+    // 6~11개월
+    { id:"E07", ag:"6-11", mo:6, text:"자음+모음 반복 옹알이를 한다 (바바바, 마마마, 다다다)", note:"반복 옹알이" },
+    { id:"E08", ag:"6-11", mo:7, text:"다양한 억양 패턴으로 옹알이를 한다", note:"억양 다양화" },
+    { id:"E09", ag:"6-11", mo:8, text:"물건을 가리키거나 손을 뻗어 원하는 것을 표현한다", note:"원시 언어적 몸짓" },
+    { id:"E10", ag:"6-11", mo:9, text:"어른의 말소리나 행동을 의도적으로 모방한다", note:"의도적 모방" },
+    { id:"E11", ag:"6-11", mo:10, text:"특정 소리나 단어로 일관되게 원하는 것을 요구한다", note:"원시어 사용" },
+    { id:"E12", ag:"6-11", mo:11, text:"의미 있는 첫 낱말을 말한다 (엄마, 아빠, 맘마, 물 등)", note:"초어 출현" },
+    // 12~17개월
+    { id:"E13", ag:"12-17", mo:12, text:"의미 있는 낱말을 3개 이상 사용한다", note:"낱말 3+" },
+    { id:"E14", ag:"12-17", mo:13, text:"원하는 물건을 가리키며 발성하여 요구한다", note:"요구 몸짓+발성" },
+    { id:"E15", ag:"12-17", mo:13, text:"동물 소리나 사물 소리를 모방한다 (멍멍, 음매, 빵빵)", note:"소리 상징어" },
+    { id:"E16", ag:"12-17", mo:14, text:"의미 있는 낱말을 5개 이상 사용한다", note:"낱말 5+" },
+    { id:"E17", ag:"12-17", mo:15, text:"자신의 이름을 말한다", note:"자기 이름 표현" },
+    { id:"E18", ag:"12-17", mo:16, text:"의미 있는 낱말을 10개 이상 사용한다", note:"낱말 10+" },
+    { id:"E19", ag:"12-17", mo:17, text:"물음억양을 사용하여 질문하듯 말한다", note:"질문 억양" },
+    // 18~23개월
+    { id:"E20", ag:"18-23", mo:18, text:"의미 있는 낱말을 20개 이상 사용한다", note:"낱말 20+" },
+    { id:"E21", ag:"18-23", mo:18, text:"두 낱말을 조합하여 말한다 ('엄마 줘', '아빠 빠이')", note:"이어문 출현" },
+    { id:"E22", ag:"18-23", mo:19, text:"'더', '없어' 등 기능어를 자발적으로 사용한다", note:"기능어 사용" },
+    { id:"E23", ag:"18-23", mo:20, text:"부정 표현을 사용한다 ('싫어', '안 해', '아니야')", note:"부정 표현" },
+    { id:"E24", ag:"18-23", mo:21, text:"세 낱말 조합을 사용한다 ('엄마 공 줘', '아빠 차 가')", note:"세 낱말 조합" },
+    { id:"E25", ag:"18-23", mo:22, text:"자신이 보거나 경험한 것을 간단히 말한다", note:"서술 표현" },
+    { id:"E26", ag:"18-23", mo:23, text:"그림책을 보며 사물이나 행동에 이름을 댄다", note:"명명하기" },
+    // 24~29개월
+    { id:"E27", ag:"24-29", mo:24, text:"의미 있는 낱말을 50개 이상 사용한다", note:"낱말 50+" },
+    { id:"E28", ag:"24-29", mo:24, text:"'나', '내' 1인칭 대명사를 사용한다", note:"1인칭 사용" },
+    { id:"E29", ag:"24-29", mo:25, text:"간단한 과거형을 사용한다 ('먹었어', '갔어')", note:"과거 시제" },
+    { id:"E30", ag:"24-29", mo:25, text:"'뭐야?', '어디야?' 의문사로 질문한다", note:"의문사 질문" },
+    { id:"E31", ag:"24-29", mo:26, text:"접속사를 사용하여 문장을 연결한다 ('그리고', '그래서')", note:"접속사 사용" },
+    { id:"E32", ag:"24-29", mo:27, text:"4~5 낱말 이상의 문장을 말한다", note:"4~5어문" },
+    { id:"E33", ag:"24-29", mo:28, text:"자기 이름, 나이, 성별을 말한다", note:"자기 소개" },
+    { id:"E34", ag:"24-29", mo:29, text:"색깔 이름 1~2개를 말한다", note:"색깔 표현" },
+    // 30~36개월
+    { id:"E35", ag:"30-36", mo:30, text:"자신의 경험이나 사건을 시간 순서에 따라 이야기한다", note:"경험 서술" },
+    { id:"E36", ag:"30-36", mo:30, text:"이유를 설명한다 ('왜냐하면…', '~해서')", note:"이유 설명" },
+    { id:"E37", ag:"30-36", mo:31, text:"미래 표현을 사용한다 ('할 거야', '먹을 거야')", note:"미래 시제" },
+    { id:"E38", ag:"30-36", mo:31, text:"복수형 표현을 사용한다 ('사과들', '친구들')", note:"복수 표현" },
+    { id:"E39", ag:"30-36", mo:32, text:"가정 표현을 사용한다 ('만약에…', '~하면')", note:"가정문" },
+    { id:"E40", ag:"30-36", mo:33, text:"5~6 낱말 이상의 복문을 사용한다", note:"복문 사용" },
+    { id:"E41", ag:"30-36", mo:34, text:"간단한 이야기를 순서에 맞게 다시 말한다", note:"이야기 재구성" },
+    { id:"E42", ag:"30-36", mo:35, text:"사물의 범주(종류)를 말할 수 있다 ('동물', '과일')", note:"범주어 사용" },
+    { id:"E43", ag:"30-36", mo:36, text:"비교 표현을 사용한다 ('더 크다', '제일 빠르다')", note:"비교 표현" },
+    // 추가 심화 문항
+    { id:"E44", ag:"0-5", mo:4, text:"기쁨이나 흥분 시 특유의 발성 패턴을 보인다", note:"감정 발성" },
+    { id:"E45", ag:"6-11", mo:8, text:"어른이 말하는 동안 번갈아 발성한다 (대화 차례 지키기)", note:"대화 차례" },
+    { id:"E46", ag:"12-17", mo:12, text:"공동주목(joint attention)을 위해 가리키기를 한다", note:"공동주목" },
+    { id:"E47", ag:"18-23", mo:21, text:"'이거', '저거' 지시어를 사용한다", note:"지시어" },
+    { id:"E48", ag:"24-29", mo:26, text:"현재 진행형을 사용한다 ('먹고 있어', '자고 있어')", note:"현재 진행형" },
+    { id:"E49", ag:"30-36", mo:32, text:"'왜?'라는 질문에 이유를 설명한다", note:"이유 표현" },
+    { id:"E50", ag:"6-11", mo:10, text:"자발적 발성이 다양해진다 (10가지 이상 다른 소리)", note:"발성 다양성" },
+    { id:"E51", ag:"12-17", mo:15, text:"사진 속 친숙한 사람의 이름을 말한다", note:"사람 이름 표현" },
+    { id:"E52", ag:"18-23", mo:22, text:"신체 부위 이름 5개 이상을 말한다", note:"신체 부위 표현" },
+    { id:"E53", ag:"24-29", mo:27, text:"반의어를 표현한다 ('크다↔작다', '많다↔적다')", note:"반의어 표현" },
+    { id:"E54", ag:"30-36", mo:33, text:"친숙한 이야기나 노래를 따라 말할 수 있다", note:"모방 표현" },
+    { id:"E55", ag:"30-36", mo:35, text:"'어떻게'에 대한 설명을 할 수 있다", note:"방법 설명" },
+    { id:"E56", ag:"30-36", mo:36, text:"다른 사람의 감정을 인식하고 언어로 표현한다 ('슬퍼', '화났어')", note:"감정 언어" },
+  ]
+};
+
+const AGE_GROUPS = [
+  { id:"0-5", label:"0~5개월" },
+  { id:"6-11", label:"6~11개월" },
+  { id:"12-17", label:"12~17개월" },
+  { id:"18-23", label:"18~23개월" },
+  { id:"24-29", label:"24~29개월" },
+  { id:"30-36", label:"30~36개월" },
+];
+
+// ── 상태 ──
+let state = {
+  currentPage: "intro",
+  childName: "", birthYear: "", birthMonth: "", gender: "", examiner: "", examDate: "",
+  activeTab: "receptive",
+  activeGroup: "0-5",
+  answers: {}  // { "R01": true, "E03": true, ... }
+};
+
+// ── 초기화 ──
+window.onload = () => {
+  document.getElementById("examDate").value = new Date().toISOString().split("T")[0];
+  showIntro();
+};
+
+function showIntro() {
+  document.getElementById("page-intro").style.display = "block";
+  document.getElementById("page-1").style.display = "none";
+  document.getElementById("page-2").style.display = "none";
+  document.getElementById("page-3").style.display = "none";
+  updateStepBar(0);
+}
+
+function goStep(n) {
+  if (n === 1 && !validateInfo() && n > 1) return;
+
+  document.getElementById("page-intro").style.display = "none";
+  document.getElementById("page-1").style.display = n === 1 ? "block" : "none";
+  document.getElementById("page-2").style.display = n === 2 ? "block" : "none";
+  document.getElementById("page-3").style.display = n === 3 ? "block" : "none";
+
+  updateStepBar(n);
+
+  if (n === 2) {
+    saveInfo();
+    renderAllItems();
+  }
+  if (n === 3) {
+    saveInfo();
+    renderResult();
+  }
+}
+
+function updateStepBar(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`step${i}-ind`);
+    el.classList.remove("active","done");
+    if (i === n) el.classList.add("active");
+    else if (i < n) el.classList.add("done");
+  }
+  for (let i = 1; i <= 2; i++) {
+    const el = document.getElementById(`div${i}`);
+    el.classList.toggle("done", i < n);
+  }
+}
+
+// ── 아동 정보 ──
+function updateAgeChip() {
+  const yr = parseInt(document.getElementById("birthYear").value);
+  const mo = parseInt(document.getElementById("birthMonth").value);
+  const name = document.getElementById("childName").value.trim();
+  const chip = document.getElementById("ageChip");
+  const ageOverMsg = document.getElementById("age-over-msg");
+  const btnLink   = document.getElementById("btn-link-exam");
+  const btnQr     = document.getElementById("btn-qr-exam");
+  const btnDirect = document.getElementById("btn-direct-exam");
+  const genderOk = !!state.gender;
+
+  if (yr && mo && name && genderOk) {
+    const age = calcAge(yr, mo);
+    chip.style.display = "block";
+
+    if (age > 36) {
+      // 36개월 초과 → 차단
+      chip.className = "age-chip over-age";
+      chip.innerHTML = `⛔ <strong>${name}</strong> 아동의 현재 생활연령: <strong>${age}개월</strong> (${Math.floor(age/12)}세 ${age%12}개월)`;
+      ageOverMsg.style.display = "block";
+      btnLink.disabled = true;
+      btnQr.disabled = true;
+      btnDirect.disabled = true;
+    } else {
+      chip.className = "age-chip";
+      chip.innerHTML = `✅ <strong>${name}</strong> 아동의 현재 생활연령: <strong>${age}개월</strong> (${Math.floor(age/12)}세 ${age%12}개월)`;
+      ageOverMsg.style.display = "none";
+      btnLink.disabled = false;
+      btnQr.disabled = false;
+      btnDirect.disabled = false;
+    }
+  } else {
+    chip.style.display = "none";
+    ageOverMsg.style.display = "none";
+    btnLink.disabled = true;
+    btnQr.disabled = true;
+    btnDirect.disabled = true;
+  }
+}
+
+const SUPABASE_URL = "https://algfzvbqxxvcaunlsrxd.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsZ2Z6dmJxeHh2Y2F1bmxzcnhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MDM5MDQsImV4cCI6MjA5NDQ3OTkwNH0.lD9pIFoSw2lYY23zDMFbfeGvI0p_kcih61rScSh5a3s";
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": opts.prefer || "return=representation",
+      ...(opts.headers || {})
+    },
+    method: opts.method || "GET",
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function genSessionId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── 세션 생성 및 링크 반환 ──
+async function createSessionAndGetUrl() {
+  const sessionId = genSessionId();
+  const age = getAge();
+  try {
+    await sbFetch("selsi_sessions", {
+      method: "POST",
+      body: {
+        session_id: sessionId,
+        child_name: state.childName,
+        child_age: age,
+        gender: state.gender,
+        examiner: state.examiner,
+        exam_date: state.examDate || new Date().toISOString().split("T")[0],
+        status: "pending"
+      }
+    });
+  } catch(e) {
+    // 테이블 없으면 경고만 — URL은 그대로 사용
+    console.warn("Supabase 저장 실패:", e.message);
+  }
+  state.currentSessionId = sessionId;
+  return `https://christalmun-sarang.github.io/selsi/?sid=${sessionId}&name=${encodeURIComponent(state.childName)}&age=${age}`;
+}
+
+// ── 메인 탭 전환 ──
+let currentFilter = 'all';
+function switchMainTab(tab) {
+  document.getElementById("tab-exam-btn").classList.toggle("active", tab === "exam");
+  document.getElementById("tab-results-btn").classList.toggle("active", tab === "results");
+  document.getElementById("panel-exam").style.display    = tab === "exam"    ? "block" : "none";
+  document.getElementById("panel-results").style.display = tab === "results" ? "block" : "none";
+  if (tab === "results") loadSessionList();
+}
+
+// ── 결과 조회 목록 ──
+let allSessions = [];
+async function loadSessionList() {
+  const el = document.getElementById("session-list");
+  el.innerHTML = '<div class="empty-state">🔄 불러오는 중...</div>';
+  try {
+    const rows = await sbFetch("selsi_sessions?select=*&order=created_at.desc&limit=50");
+    allSessions = rows || [];
+    renderSessionList();
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ 불러오기 실패: ${e.message}<br><small>Supabase 테이블이 생성되어 있는지 확인해 주세요.</small></div>`;
+  }
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ["all","completed","pending"].forEach(id => {
+    const btn = document.getElementById("filter-" + id);
+    if (btn) {
+      btn.style.background = id === f ? "var(--primary)" : "";
+      btn.style.color = id === f ? "white" : "";
+      btn.style.borderColor = id === f ? "var(--primary)" : "";
+    }
+  });
+  renderSessionList();
+}
+
+function renderSessionList() {
+  const el = document.getElementById("session-list");
+  const filtered = currentFilter === "all"
+    ? allSessions
+    : allSessions.filter(s => s.status === currentFilter);
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state">📭 해당 항목이 없습니다.</div>';
+    return;
+  }
+
+  // innerHTML 대신 DOM 직접 생성 — 따옴표 충돌 완전 회피
+  el.innerHTML = "";
+  filtered.forEach(s => {
+    const isDone = s.status === "completed";
+    const dateStr = s.exam_date || (s.created_at ? s.created_at.slice(0,10) : "-");
+    const completedStr = s.completed_at
+      ? new Date(s.completed_at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})
+      : null;
+
+    // 행 컨테이너
+    const row = document.createElement("div");
+    row.className = "session-row " + (isDone ? "completed" : "pending");
+    row.style.cssText = "position:relative;cursor:" + (isDone?"pointer":"default");
+
+    // 아바타
+    const avatar = document.createElement("div");
+    avatar.className = "session-avatar " + (isDone ? "completed" : "pending");
+    avatar.textContent = isDone ? "✅" : "⏳";
+    row.appendChild(avatar);
+
+    // 정보 영역
+    const info = document.createElement("div");
+    info.className = "session-info";
+    info.style.flex = "1";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "session-name";
+    nameEl.innerHTML = (s.child_name || "미입력") +
+      ' <span style="font-size:12px;font-weight:500;color:var(--slate-500);">' +
+      (s.child_age || "-") + "개월 · " + (s.gender || "-") + "</span>";
+    info.appendChild(nameEl);
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "session-meta";
+    metaEl.textContent = "검사일: " + dateStr + " · 검사자: " + (s.examiner || "-") +
+      (completedStr ? " · 완료: " + completedStr : "");
+    info.appendChild(metaEl);
+
+    if (!isDone) {
+      const warn = document.createElement("div");
+      warn.style.cssText = "font-size:11px;color:#d97706;margin-top:3px;font-weight:600;";
+      warn.textContent = "⚠️ 아직 검사가 완료되지 않았습니다";
+      info.appendChild(warn);
+    }
+    row.appendChild(info);
+
+    // 오른쪽: 배지 + 삭제 버튼
+    const right = document.createElement("div");
+    right.style.cssText = "display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;";
+
+    const badge = document.createElement("div");
+    badge.className = "session-badge " + (isDone ? "completed" : "pending");
+    badge.textContent = isDone ? "완료" : "검사중";
+    right.appendChild(badge);
+
+    const delBtn = document.createElement("button");
+    delBtn.style.cssText = "padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;";
+    delBtn.textContent = "🗑 삭제";
+    delBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      deleteSession(s.session_id, s.child_name || "미입력");
+    });
+    right.appendChild(delBtn);
+    row.appendChild(right);
+
+    // 완료된 행만 클릭 → 결과 보기
+    if (isDone) {
+      row.addEventListener("click", function() {
+        showSessionResult(s.session_id);
+      });
+    }
+
+    el.appendChild(row);
+  });
+}
+
+async function deleteSession(sessionId, name) {
+  if (!confirm('⚠️ "' + name + '" 아동의 검사 데이터를 삭제하시겠습니까?\n\n삭제된 데이터는 복구할 수 없습니다.')) return;
+  try {
+    await sbFetch("selsi_sessions?session_id=eq."+sessionId, {
+      method: "DELETE", prefer: "return=minimal"
+    });
+    allSessions = allSessions.filter(s => s.session_id !== sessionId);
+    renderSessionList();
+  } catch(err) {
+    alert("삭제 실패: " + err.message);
+  }
+}
+
+async function showSessionResult(sessionId) {
+  try {
+    const rows = await sbFetch(`selsi_sessions?session_id=eq.${sessionId}&select=*`);
+    if (!rows || !rows[0]) { alert("결과를 찾을 수 없습니다."); return; }
+    showResultModal(rows[0]);
+  } catch(e) { alert("오류: " + e.message); }
+}
+
+function showResultModal(r) {
+  state.childName  = r.child_name  || "";
+  state.gender     = r.gender      || "";
+  state.examiner   = r.examiner    || "";
+  state.examDate   = r.exam_date   || "";
+  state._remoteAge = r.child_age;
+  state.answers    = r.answers     || {};
+  state.birthYear  = ""; state.birthMonth = "";
+
+  const sc = calcScores();
+  const rProfile = groupProfile("receptive");
+  const eProfile = groupProfile("expressive");
+  const examDateFmt = r.exam_date
+    ? new Date(r.exam_date).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"})
+    : "-";
+  const interpColors = { normal:"#16a34a", mild:"#d97706", delay:"#dc2626" };
+
+  function sCard(label, d) {
+    return `<div class="score-card ${d.interp.cls}">
+      <div class="sc-head"><div class="sc-title">${label}</div><div class="sc-badge ${d.interp.cls}">${d.interp.label}</div></div>
+      <div class="sc-nums">
+        <div class="sc-num"><div class="sc-val">${d.score}<span class="sc-unit">점</span></div><div class="sc-key">원점수 (/${d.total})</div></div>
+        <div class="sc-num"><div class="sc-val">${d.pct}<span class="sc-unit">%</span></div><div class="sc-key">정반응률</div></div>
+        <div class="sc-num"><div class="sc-val" style="color:${interpColors[d.interp.cls]}">${d.equiv}<span class="sc-unit">개월</span></div><div class="sc-key">등가월령</div></div>
+      </div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" style="width:${d.pct}%"></div></div>
+    </div>`;
+  }
+  function pTable(profile, label) {
+    const rows = profile.map(p => {
+      const tag = p.autoMode==="auto-pass"
+        ? `<span style="font-size:10px;background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 5px;margin-left:4px;">자동가능</span>`
+        : p.autoMode==="auto-fail"
+        ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;margin-left:4px;">자동불가</span>`
+        : `<span style="font-size:10px;background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 5px;margin-left:4px;">직접체크</span>`;
+      return `<tr><td>${p.label}${tag}</td><td>${p.passed}/${p.total}</td>
+        <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+        <span style="font-size:12px;font-weight:700;color:${p.color};min-width:35px">${p.pct}%</span></div></td></tr>`;
+    }).join("");
+    return `<div class="profile-section"><div class="section-title">${label} 월령별 프로파일</div>
+      <table class="profile-table"><thead><tr><th>월령 구간</th><th>통과 문항</th><th>정반응률</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+
+  let opinion = "";
+  if (sc.r.interp.cls==="normal" && sc.e.interp.cls==="normal")
+    opinion = "수용언어와 표현언어 두 영역 모두 <strong>정상 발달</strong> 범위 내에 있습니다.";
+  else opinion = "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
+
+  let modal = document.getElementById("remote-result-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "remote-result-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;overflow-y:auto;padding:20px;display:flex;align-items:flex-start;justify-content:center;";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;max-width:860px;width:100%;padding:28px;margin:auto;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="font-size:20px;font-weight:800;">📊 검사 결과 — ${r.child_name || ""}</div>
+        <button onclick="document.getElementById('remote-result-modal').style.display='none'"
+          style="padding:8px 16px;background:var(--slate-100);color:var(--slate-600);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">✕ 닫기</button>
+      </div>
+      <div class="result-header">
+        <div>
+          <div class="result-name">${state.childName} (${state.gender || "-"})</div>
+          <div class="result-info">검사일: ${examDateFmt} | 검사자: ${state.examiner || "-"}</div>
+        </div>
+        <div class="result-age-badge">생활연령<br><strong>${sc.age}개월</strong></div>
+      </div>
+      <div class="score-cards">${sCard("🎧 수용언어", sc.r)}${sCard("🗣️ 표현언어", sc.e)}</div>
+      ${pTable(rProfile,"🎧 수용언어")}${pTable(eProfile,"🗣️ 표현언어")}
+      <div class="opinion-box">
+        <div class="opinion-title">📋 종합 소견</div>
+        <div class="opinion-text">${state.childName}(생활연령 ${sc.age}개월)의 SELSI 결과, 수용언어 등가월령 <strong>${sc.r.equiv}개월</strong>, 표현언어 등가월령 <strong>${sc.e.equiv}개월</strong>으로 측정되었습니다. ${opinion}</div>
+        <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+        <button onclick="downloadPDF()" class="btn-green" style="flex:1;min-width:140px;">📄 PDF 결과지 저장</button>
+        <button onclick="showResultQR()" style="flex:1;min-width:120px;padding:12px;background:#6366f1;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📲 QR 공유</button>
+        <button onclick="document.getElementById('remote-result-modal').style.display='none'" class="btn-secondary">닫기</button>
+      </div>
+    </div>`;
+  modal.style.display = "flex";
+}
+
+// ── 검사 시작 ──
+function startExam(mode) {
+  saveInfo();
+  const age = getAge();
+  if (age > 36) { alert("36개월을 초과한 아동은 검사를 진행할 수 없습니다."); return; }
+
+  if (mode === "link" || mode === "qr") {
+    const btnId = mode === "link" ? "btn-link-exam" : "btn-qr-exam";
+    const btn = document.getElementById(btnId);
+    const origHTML = btn.innerHTML;
+    btn.textContent = "⏳ 생성 중...";
+    btn.disabled = true;
+    createSessionAndGetUrl().then(url => {
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+      showLinkShareModal(url, mode);
+    }).catch(e => {
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+      alert("링크 생성 실패: " + e.message);
+    });
+    return;
+  }
+  openGuideModal();
+}
+
+function openGuideModal() {
+  document.getElementById("guide-modal").classList.add("open");
+}
+function closeGuideModal() {
+  document.getElementById("guide-modal").classList.remove("open");
+  goStep(2);
+}
+
+// 링크/QR 공유 모달
+function showLinkShareModal(url, mode) {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  const div = document.createElement("div");
+  div.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  div.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:26px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
+      <div style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:4px;">${mode==="qr"?"📷 QR 검사":"🔗 링크 검사"}</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:14px;">보호자에게 아래 링크를 카카오톡 등으로 전송하세요.</div>
+      ${mode==="qr"?`<div style="text-align:center;margin-bottom:14px;"><img src="${qrUrl}" width="180" height="180" style="border-radius:10px;border:1px solid #e2e8f0;"></div>`:""}
+      <div style="background:#f1f5f9;border-radius:10px;padding:12px;font-size:12px;word-break:break-all;color:#334155;margin-bottom:14px;border:1px solid #e2e8f0;">
+        <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;">🔗 보호자용 검사 링크</div>
+        ${url}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="copy-btn-share" onclick="navigator.clipboard.writeText('${url}').then(()=>{document.getElementById('copy-btn-share').textContent='✅ 복사됨!';setTimeout(()=>document.getElementById('copy-btn-share').textContent='📋 링크 복사',2000)})"
+          style="flex:1;padding:11px;background:#6366f1;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+          📋 링크 복사
+        </button>
+        <button onclick="window.open('${url}','_blank')"
+          style="flex:1;padding:11px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+          🔗 새 탭 열기
+        </button>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;text-align:center;margin-bottom:12px;">완료 후 <strong>결과 조회 탭</strong>에서 확인하세요.</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()"
+        style="width:100%;padding:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+        확인
+      </button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function selectGender(g) {
+  state.gender = g;
+  document.getElementById("btn-male").classList.toggle("active", g === "남아");
+  document.getElementById("btn-female").classList.toggle("active", g === "여아");
+  updateAgeChip();
+}
+
+function saveInfo() {
+  state.childName = document.getElementById("childName").value.trim();
+  state.birthYear = document.getElementById("birthYear").value;
+  state.birthMonth = document.getElementById("birthMonth").value;
+  state.examiner = document.getElementById("examiner").value.trim();
+  state.examDate = document.getElementById("examDate").value;
+}
+
+function validateInfo() {
+  return state.childName || document.getElementById("childName").value.trim();
+}
+
+function calcAge(yr, mo) {
+  if (!yr || !mo) return 0;
+  const now = new Date();
+  const birth = new Date(yr, mo - 1);
+  return Math.max(0, (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth()));
+}
+
+function getAge() {
+  if (state._remoteAge) return state._remoteAge;
+  return calcAge(parseInt(state.birthYear), parseInt(state.birthMonth));
+}
+
+// ══════════════════════════════════════════════════════
+// 월령 범위 헬퍼
+// activeRange: 아동 월령 ±6개월 범위 내 문항 → 직접 체크
+// below: 월령 -6 미만 → 자동 가능(true)
+// above: 월령 +6 초과 → 자동 불가능(false)
+// ══════════════════════════════════════════════════════
+function getItemZone(item) {
+  const age = getAge();
+  const lo = age - 6;   // 범위 하한
+  const hi = age + 6;   // 범위 상한
+  if (item.mo < lo) return "below";   // 자동 가능
+  if (item.mo > hi) return "above";   // 자동 불가능
+  return "active";                    // 직접 체크
+}
+
+// 검사 화면 진입 시 범위 밖 문항에 자동 답변 세팅
+function applyAutoAnswers() {
+  const allItems = [...ITEMS.receptive, ...ITEMS.expressive];
+  allItems.forEach(item => {
+    const zone = getItemZone(item);
+    if (zone === "below") state.answers[item.id] = true;
+    else if (zone === "above") state.answers[item.id] = false;
+    // active 구간은 기존 답변 유지 (새 검사면 undefined)
+  });
+}
+
+// 직접 체크해야 할 문항 목록
+function getActiveItems(type) {
+  return ITEMS[type].filter(i => getItemZone(i) === "active")
+    .sort((a,b) => a.mo - b.mo);
+}
+
+// ── 검사 실시 ──
+function renderAllItems() {
+  applyAutoAnswers();
+  const container = document.getElementById("allItemsList");
+  const age = getAge();
+  const lo = age - 6, hi = age + 6;
+
+  function itemHTML(item) {
+    const val = state.answers[item.id];
+    const rowCls = val === true ? "pass" : val === false ? "fail" : "";
+    const passCls = val === true ? "active" : "";
+    const failCls = val === false ? "active" : "";
+    return `<div class="item-row ${rowCls}" id="row-${item.id}">
+      <div class="item-content">
+        <div class="item-header">
+          <span class="item-id">${item.id}</span>
+          <span class="item-age-tag">${item.mo}개월</span>
+        </div>
+        <div class="item-text">${item.text}</div>
+        ${item.note ? `<div class="item-note">📎 ${item.note}</div>` : ""}
+        <div class="ans-btns">
+          <button class="ans-btn pass-btn ${passCls}" onclick="setAnswer('${item.id}', true)">✅ 가능</button>
+          <button class="ans-btn fail-btn ${failCls}" onclick="setAnswer('${item.id}', false)">❌ 불가능</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const rActive = getActiveItems("receptive");
+  const eActive = getActiveItems("expressive");
+
+  let html = "";
+
+  // 검사 범위 안내 배너
+  html += `<div style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:white;border-radius:14px;
+    padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.7;">
+    🎯 <strong>검사 범위 안내</strong> — 생활연령 <strong>${age}개월</strong> 기준<br>
+    <span style="opacity:0.85;">
+      ✅ <strong>${lo}개월 미만</strong> 문항(${ITEMS.receptive.filter(i=>i.mo<lo).length + ITEMS.expressive.filter(i=>i.mo<lo).length}개): 자동 <em>가능</em> 처리&emsp;
+      📝 <strong>${lo}~${hi}개월</strong> 문항(${rActive.length + eActive.length}개): 직접 체크&emsp;
+      ❌ <strong>${hi}개월 초과</strong> 문항(${ITEMS.receptive.filter(i=>i.mo>hi).length + ITEMS.expressive.filter(i=>i.mo>hi).length}개): 자동 <em>불가능</em> 처리
+    </span>
+  </div>`;
+
+  // ── 수용언어 배너 ──
+  const rDone = rActive.every(i => state.answers[i.id] !== undefined);
+  const rChecked = rActive.filter(i => state.answers[i.id] !== undefined).length;
+  html += `<div class="section-banner">
+    <span class="banner-icon">🎧</span>
+    <div>
+      <div>수용언어 검사</div>
+      <div class="banner-sub" id="r-banner-sub">Receptive Language · 체크 대상 ${rActive.length}문항&nbsp;&nbsp;
+        ${rDone ? "✅ 완료" : "("+rChecked+"/"+rActive.length+" 완료)"}</div>
+    </div>
+  </div>`;
+
+  if (rActive.length === 0) {
+    html += `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;">
+      ✅ 수용언어 문항이 모두 자동 처리되었습니다.</div>`;
+  } else {
+    html += rActive.map(itemHTML).join("");
+  }
+
+  // ── 표현언어 배너 ──
+  const eDone = eActive.every(i => state.answers[i.id] !== undefined);
+  const eChecked = eActive.filter(i => state.answers[i.id] !== undefined).length;
+  html += `<div class="section-banner expressive" style="margin-top:24px;">
+    <span class="banner-icon">🗣️</span>
+    <div>
+      <div>표현언어 검사</div>
+      <div class="banner-sub" id="e-banner-sub">Expressive Language · 체크 대상 ${eActive.length}문항&nbsp;&nbsp;
+        ${eDone ? "✅ 완료" : "("+eChecked+"/"+eActive.length+" 완료)"}</div>
+    </div>
+  </div>`;
+
+  if (eActive.length === 0) {
+    html += `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;">
+      ✅ 표현언어 문항이 모두 자동 처리되었습니다.</div>`;
+  } else {
+    html += eActive.map(itemHTML).join("");
+  }
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function setAnswer(id, val) {
+  state.answers[id] = val;
+  const item = [...ITEMS.receptive, ...ITEMS.expressive].find(i => i.id === id);
+  if (!item) return;
+  const row = document.getElementById("row-" + id);
+  if (row) {
+    const rowCls = val === true ? "pass" : val === false ? "fail" : "";
+    row.className = "item-row " + rowCls;
+    row.querySelectorAll(".pass-btn").forEach(b => b.classList.toggle("active", val === true));
+    row.querySelectorAll(".fail-btn").forEach(b => b.classList.toggle("active", val === false));
+  }
+  renderBannerCounts();
+  updateProgress();
+}
+
+function renderBannerCounts() {
+  const rActive = getActiveItems("receptive");
+  const eActive = getActiveItems("expressive");
+  const rChecked = rActive.filter(i => state.answers[i.id] !== undefined).length;
+  const eChecked = eActive.filter(i => state.answers[i.id] !== undefined).length;
+  const rDone = rChecked === rActive.length;
+  const eDone = eChecked === eActive.length;
+  const rs = document.getElementById("r-banner-sub");
+  const es = document.getElementById("e-banner-sub");
+  if (rs) rs.innerHTML = `Receptive Language · 체크 대상 ${rActive.length}문항&nbsp;&nbsp;` +
+    (rDone ? "✅ 완료" : `(${rChecked}/${rActive.length} 완료)`);
+  if (es) es.innerHTML = `Expressive Language · 체크 대상 ${eActive.length}문항&nbsp;&nbsp;` +
+    (eDone ? "✅ 완료" : `(${eChecked}/${eActive.length} 완료)`);
+}
+
+function updateProgress() {
+  const rActive = getActiveItems("receptive");
+  const eActive = getActiveItems("expressive");
+  const activeItems = [...rActive, ...eActive];
+  const total = activeItems.length;
+  const done  = activeItems.filter(i => state.answers[i.id] !== undefined).length;
+  const pct = total === 0 ? 100 : Math.round((done/total)*100);
+  const remaining = total - done;
+
+  document.getElementById("progText").textContent =
+    total === 0 ? "모든 문항 자동 처리됨" : `${done} / ${total} 문항 완료 (직접 체크)`;
+  document.getElementById("progPct").textContent = `${pct}%`;
+  document.getElementById("progFill").style.width = pct + "%";
+
+  const btn = document.getElementById("btn-to-result");
+  const msg = document.getElementById("incomplete-msg");
+  const rc  = document.getElementById("remaining-count");
+  if (btn) {
+    if (remaining === 0) {
+      btn.disabled = false;
+      btn.style.background = "linear-gradient(135deg,#16a34a,#15803d)";
+      btn.textContent = "✅ 결과 보기 →";
+      if (msg) msg.style.display = "none";
+    } else {
+      btn.disabled = true;
+      btn.style.background = "";
+      btn.textContent = "결과 보기 →";
+      if (rc) rc.textContent = remaining;
+      if (msg) msg.style.display = "block";
+    }
+  }
+}
+
+function goResult() {
+  const rActive = getActiveItems("receptive");
+  const eActive = getActiveItems("expressive");
+  const activeItems = [...rActive, ...eActive];
+  const done = activeItems.filter(i => state.answers[i.id] !== undefined).length;
+  const msg = document.getElementById("incomplete-msg");
+  if (done < activeItems.length) {
+    if (msg) msg.style.display = "block";
+    return;
+  }
+  goStep(3);
+}
+
+// ── 점수 계산 ──
+function calcScores() {
+  const rItems = ITEMS.receptive;
+  const eItems = ITEMS.expressive;
+  const rScore = rItems.filter(i => state.answers[i.id]).length;
+  const eScore = eItems.filter(i => state.answers[i.id]).length;
+
+  // 등가월령: 구간별 통과율로 추정
+  function equivAge(items, score) {
+    // 각 구간별 통과 문항 수 누적하여 마지막 완전 통과 구간 + 부분 통과 보정
+    let cumScore = 0;
+    for (const g of AGE_GROUPS) {
+      const gItems = items.filter(i => i.ag === g.id);
+      const gPassed = gItems.filter(i => state.answers[i.id]).length;
+      const gTotal = gItems.length;
+      // 구간 중간점 계산
+      const [lo, hi] = g.id.split("-").map(Number);
+      const midAge = (lo + hi) / 2;
+      cumScore += gPassed;
+      if (gPassed < gTotal) {
+        // 부분 통과: 구간 내 비율로 보간
+        const ratio = gTotal > 0 ? gPassed / gTotal : 0;
+        return Math.round(lo + ratio * (hi - lo + 1));
+      }
+    }
+    return 36; // 모두 통과
+  }
+
+  const rEquiv = equivAge(rItems, rScore);
+  const eEquiv = equivAge(eItems, eScore);
+  const age = getAge();
+
+  function interp(equiv, actual) {
+    const diff = equiv - actual;
+    if (diff >= -3) return { label:"정상 발달", cls:"normal" };
+    if (diff >= -6) return { label:"약간 지연 의심", cls:"mild" };
+    return { label:"발달 지연 의심", cls:"delay" };
+  }
+
+  return {
+    age,
+    r: { score: rScore, total: rItems.length, equiv: rEquiv, pct: Math.round(rScore/rItems.length*100), interp: interp(rEquiv, age) },
+    e: { score: eScore, total: eItems.length, equiv: eEquiv, pct: Math.round(eScore/eItems.length*100), interp: interp(eEquiv, age) },
+  };
+}
+
+// ── 구간별 점수 프로파일 ──
+function groupProfile(type) {
+  const age = getAge();
+  const lo = age - 6, hi = age + 6;
+  return AGE_GROUPS.map(g => {
+    const items = ITEMS[type].filter(i => i.ag === g.id);
+    const passed = items.filter(i => state.answers[i.id] === true).length;
+    const pct = items.length > 0 ? Math.round(passed/items.length*100) : 0;
+    const color = pct >= 80 ? "#16a34a" : pct >= 50 ? "#d97706" : "#dc2626";
+    // 이 구간이 자동 처리됐는지 여부
+    const allBelow = items.every(i => i.mo < lo);
+    const allAbove = items.every(i => i.mo > hi);
+    const autoMode = allBelow ? "auto-pass" : allAbove ? "auto-fail" : "mixed";
+    return { label: g.label, passed, total: items.length, pct, color, autoMode };
+  });
+}
+
+// ── 결과 렌더링 ──
+function renderResult() {
+  const sc = calcScores();
+  const rProfile = groupProfile("receptive");
+  const eProfile = groupProfile("expressive");
+
+  const examDateFmt = state.examDate
+    ? new Date(state.examDate).toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric"})
+    : "-";
+
+  const interpColors = { normal: "#16a34a", mild: "#d97706", delay: "#dc2626" };
+
+  function scoreCard(label, d) {
+    return `<div class="score-card ${d.interp.cls}">
+      <div class="sc-head">
+        <div class="sc-title">${label}</div>
+        <div class="sc-badge ${d.interp.cls}">${d.interp.label}</div>
+      </div>
+      <div class="sc-nums">
+        <div class="sc-num">
+          <div class="sc-val">${d.score}<span class="sc-unit">점</span></div>
+          <div class="sc-key">원점수 (/${d.total})</div>
+        </div>
+        <div class="sc-num">
+          <div class="sc-val">${d.pct}<span class="sc-unit">%</span></div>
+          <div class="sc-key">정반응률</div>
+        </div>
+        <div class="sc-num">
+          <div class="sc-val" style="color:${interpColors[d.interp.cls]}">${d.equiv}<span class="sc-unit">개월</span></div>
+          <div class="sc-key">등가월령</div>
+        </div>
+      </div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" style="width:${d.pct}%"></div></div>
+    </div>`;
+  }
+
+  function profileTable(profile, label) {
+    const rows = profile.map(p => {
+      const autoTag = p.autoMode === "auto-pass"
+        ? `<span style="font-size:10px;background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 6px;margin-left:5px;font-weight:700;">자동가능</span>`
+        : p.autoMode === "auto-fail"
+        ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 6px;margin-left:5px;font-weight:700;">자동불가</span>`
+        : `<span style="font-size:10px;background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 6px;margin-left:5px;font-weight:700;">직접체크</span>`;
+      return `<tr>
+        <td>${p.label}${autoTag}</td>
+        <td>${p.passed} / ${p.total}</td>
+        <td>
+          <div class="pct-bar-wrap">
+            <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+            <span style="font-size:12px;font-weight:700;color:${p.color};min-width:35px">${p.pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+    return `<div class="profile-section">
+      <div class="section-title">${label} 월령별 프로파일</div>
+      <table class="profile-table">
+        <thead><tr><th>월령 구간</th><th>통과 문항</th><th>정반응률</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  // 종합 소견 생성
+  const bothNormal = sc.r.interp.cls === "normal" && sc.e.interp.cls === "normal";
+  const bothDelay = sc.r.interp.cls === "delay" && sc.e.interp.cls === "delay";
+  const rOnly = sc.r.interp.cls !== "normal" && sc.e.interp.cls === "normal";
+  const eOnly = sc.e.interp.cls !== "normal" && sc.r.interp.cls === "normal";
+
+  let opinionText = `${state.childName}(생활연령 ${sc.age}개월)의 SELSI 검사 결과, 수용언어 등가월령은 <strong>${sc.r.equiv}개월</strong>, 표현언어 등가월령은 <strong>${sc.e.equiv}개월</strong>으로 측정되었습니다.<br><br>`;
+  if (bothNormal) opinionText += "수용언어와 표현언어 두 영역 모두 <strong>정상 발달</strong> 범위 내에 있습니다.";
+  else if (bothDelay) opinionText += "수용언어와 표현언어 <strong>두 영역 모두 발달 지연이 의심</strong>됩니다. 전문 언어치료사에 의한 정밀 평가 및 조기 중재를 강력히 권장합니다.";
+  else if (rOnly) opinionText += `<strong>수용언어(${sc.r.interp.label})</strong>에서 발달 지연이 의심되며, 표현언어는 정상 범위에 있습니다. 언어 이해력 향상을 위한 전문가 상담이 권장됩니다.`;
+  else if (eOnly) opinionText += `<strong>표현언어(${sc.e.interp.label})</strong>에서 발달 지연이 의심되며, 수용언어는 정상 범위에 있습니다. 언어 표현 능력 향상을 위한 전문가 상담이 권장됩니다.`;
+  else opinionText += "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
+
+  const html = `
+    <div class="result-header">
+      <div>
+        <div class="result-name">${state.childName || "미입력"} (${state.gender || "-"})</div>
+        <div class="result-info">검사일: ${examDateFmt} | 검사자: ${state.examiner || "-"}</div>
+      </div>
+      <div class="result-age-badge">생활연령<br><strong>${sc.age}개월</strong></div>
+    </div>
+    <div class="score-cards">
+      ${scoreCard("🎧 수용언어 (Receptive)", sc.r)}
+      ${scoreCard("🗣️ 표현언어 (Expressive)", sc.e)}
+    </div>
+    ${profileTable(rProfile, "🎧 수용언어")}
+    ${profileTable(eProfile, "🗣️ 표현언어")}
+    <div class="opinion-box">
+      <div class="opinion-title">📋 종합 소견</div>
+      <div class="opinion-text">${opinionText}</div>
+      <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다. 정확한 평가는 반드시 자격을 갖춘 언어치료사가 실시해야 합니다.</div>
+    </div>
+  `;
+
+  document.getElementById("resultContent").innerHTML = html;
+}
+
+// ── PDF 출력 ──
+function downloadPDF() {
+  const sc = calcScores();
+  const rProfile = groupProfile("receptive");
+  const eProfile = groupProfile("expressive");
+  const examDateFmt = state.examDate
+    ? new Date(state.examDate).toLocaleDateString("ko-KR")
+    : "-";
+
+  const interpLabel = { normal:"정상 발달", mild:"약간 지연 의심", delay:"발달 지연 의심" };
+  const interpColor = { normal:"#16a34a", mild:"#d97706", delay:"#dc2626" };
+  const interpBg    = { normal:"#f0fdf4",  mild:"#fffbeb",  delay:"#fef2f2" };
+
+  // ── 결과지 HTML 생성 ──
+  function profileRows(profile) {
+    return profile.map((p, i) => {
+      const c = p.pct >= 80 ? "#16a34a" : p.pct >= 50 ? "#d97706" : "#dc2626";
+      const bg = i % 2 === 0 ? "white" : "#fafafa";
+      const autoTag = p.autoMode === "auto-pass"
+        ? `<span style="font-size:8px;background:#dcfce7;color:#15803d;border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:700;">자동가능</span>`
+        : p.autoMode === "auto-fail"
+        ? `<span style="font-size:8px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:700;">자동불가</span>`
+        : `<span style="font-size:8px;background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:700;">직접체크</span>`;
+      return `<tr style="border-bottom:1px solid #f1f5f9;background:${bg};">
+        <td style="padding:5px 10px;font-size:11px;font-weight:600;color:#334155;">${p.label}${autoTag}</td>
+        <td style="padding:5px 8px;text-align:center;font-size:11px;font-weight:700;color:#475569;">${p.passed}/${p.total}</td>
+        <td style="padding:5px 10px;">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="flex:1;height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
+              <div style="width:${p.pct}%;height:100%;background:${c};border-radius:99px;"></div>
+            </div>
+            <span style="font-weight:800;color:${c};font-size:10.5px;min-width:32px;">${p.pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  const bothOk = sc.r.interp.cls === "normal" && sc.e.interp.cls === "normal";
+  const opinion = bothOk
+    ? "수용언어와 표현언어 두 영역 모두 정상 발달 범위 내에 있습니다."
+    : "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사에 의한 정밀 평가를 권장합니다.";
+
+  function scoreBox(label, d) {
+    const c = interpColor[d.interp.cls];
+    const bg = interpBg[d.interp.cls];
+    return `
+    <div style="flex:1;border-radius:10px;border:1.5px solid ${c}50;background:${bg};padding:10px 12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-weight:800;font-size:12px;">${label}</span>
+        <span style="background:${c};color:white;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;">${interpLabel[d.interp.cls]}</span>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:7px;">
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;">${d.score}<span style="font-size:10px;color:#94a3b8;">/${d.total}</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">원점수</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;">${d.pct}<span style="font-size:10px;color:#94a3b8;">%</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">정반응률</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;color:${c};">${d.equiv}<span style="font-size:10px;color:#94a3b8;">개월</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">등가월령</div>
+        </div>
+      </div>
+      <div style="height:5px;background:rgba(0,0,0,0.08);border-radius:99px;overflow:hidden;">
+        <div style="width:${d.pct}%;height:100%;background:${c};border-radius:99px;"></div>
+      </div>
+    </div>`;
+  }
+
+  const printHTML = `
+  <div style="font-family:'Noto Sans KR',sans-serif;width:750px;padding:20px 24px;color:#1e293b;box-sizing:border-box;">
+
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border-radius:12px;padding:14px 20px;margin-bottom:14px;display:flex;align-items:center;gap:14px;">
+      <div style="background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.35);border-radius:8px;padding:5px 14px;font-weight:900;font-size:19px;letter-spacing:3px;flex-shrink:0;">SELSI</div>
+      <div>
+        <div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;">영·유아 언어발달 검사 결과지</div>
+        <div style="font-size:11px;opacity:0.78;margin-top:2px;">Sequenced Language Scale for Infants</div>
+      </div>
+      <div style="margin-left:auto;text-align:right;font-size:11px;opacity:0.88;line-height:1.8;">
+        검사일: ${examDateFmt}<br>검사자: ${state.examiner||"-"}
+      </div>
+    </div>
+
+    <!-- 아동 정보 + 점수 요약 -->
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:stretch;">
+      <!-- 아동 정보 -->
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 16px;flex:0 0 auto;min-width:190px;">
+        <div style="font-weight:800;font-size:11px;color:#64748b;margin-bottom:9px;text-transform:uppercase;letter-spacing:0.5px;">👶 아동 정보</div>
+        ${[["이름",state.childName||"-"],["성별",state.gender||"-"],["생활연령",sc.age+"개월 ("+Math.floor(sc.age/12)+"세 "+sc.age%12+"개월)"]].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px;gap:8px;">
+          <span style="color:#94a3b8;font-weight:600;white-space:nowrap;">${k}</span>
+          <span style="font-weight:700;color:#1e293b;text-align:right;">${v}</span>
+        </div>`).join("")}
+      </div>
+      <!-- 수용언어 점수 -->
+      ${scoreBox("🎧 수용언어", sc.r)}
+      <!-- 표현언어 점수 -->
+      ${scoreBox("🗣️ 표현언어", sc.e)}
+    </div>
+
+    <!-- 프로파일 테이블 2개 나란히 -->
+    <div style="display:flex;gap:12px;margin-bottom:14px;">
+      <!-- 수용언어 -->
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">🎧 수용언어 월령별 프로파일</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:white;border-radius:10px;overflow:hidden;border:1.5px solid #e2e8f0;">
+          <thead><tr style="background:#f1f5f9;">
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">월령 구간</th>
+            <th style="padding:6px 8px;text-align:center;font-weight:700;color:#475569;font-size:10px;">통과</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">정반응률</th>
+          </tr></thead>
+          <tbody>${profileRows(rProfile)}</tbody>
+        </table>
+      </div>
+      <!-- 표현언어 -->
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">🗣️ 표현언어 월령별 프로파일</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:white;border-radius:10px;overflow:hidden;border:1.5px solid #e2e8f0;">
+          <thead><tr style="background:#f1f5f9;">
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">월령 구간</th>
+            <th style="padding:6px 8px;text-align:center;font-weight:700;color:#475569;font-size:10px;">통과</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">정반응률</th>
+          </tr></thead>
+          <tbody>${profileRows(eProfile)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 종합 소견 -->
+    <div style="background:#f8fafc;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-weight:800;font-size:12px;margin-bottom:6px;color:#1e293b;">📋 종합 소견</div>
+      <div style="font-size:11.5px;line-height:1.85;color:#475569;">
+        <strong style="color:#1e293b;">${state.childName||"대상아동"}</strong>(생활연령 ${sc.age}개월)의 검사 결과,
+        수용언어 등가월령 <strong style="color:#1e293b;">${sc.r.equiv}개월</strong>(정반응률 ${sc.r.pct}%, <span style="color:${interpColor[sc.r.interp.cls]};font-weight:700;">${interpLabel[sc.r.interp.cls]}</span>),
+        표현언어 등가월령 <strong style="color:#1e293b;">${sc.e.equiv}개월</strong>(정반응률 ${sc.e.pct}%, <span style="color:${interpColor[sc.e.interp.cls]};font-weight:700;">${interpLabel[sc.e.interp.cls]}</span>)으로 측정되었습니다.
+        ${opinion}
+      </div>
+    </div>
+
+    <!-- 서명란 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-top:1.5px solid #e2e8f0;font-size:10px;color:#94a3b8;">
+      <div>검사자 서명: ____________________________</div>
+      <div style="text-align:center;font-size:9.5px;">※ 본 결과는 선별검사 참고용이며, 공식 임상 진단 자료로 사용할 수 없습니다.</div>
+      <div>검사일: ${examDateFmt}</div>
+    </div>
+
+  </div>`;
+
+  // ── html2canvas → jsPDF 변환 (A4 단일 페이지) ──
+  const printArea = document.getElementById("pdf-print-area");
+  printArea.innerHTML = printHTML;
+  printArea.style.left = "-9999px";
+  printArea.style.display = "block";
+
+  const btn = document.querySelector(".btn-green");
+  const origText = btn.textContent;
+  btn.textContent = "⏳ PDF 생성 중...";
+  btn.disabled = true;
+
+  setTimeout(() => {
+    html2canvas(printArea, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      width: 740,
+    }).then(canvas => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+      const pageW = 210, pageH = 297;
+      // 콘텐츠를 A4 한 장에 맞게 스케일 조정
+      const imgW = pageW - 10; // 좌우 여백 5mm씩
+      const imgH = canvas.height * (imgW / canvas.width);
+      const finalH = Math.min(imgH, pageH - 10); // 최대 A4 높이
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, 5, imgW, finalH);
+      pdf.save(`SELSI_${state.childName || "결과"}_${state.examDate || "검사"}.pdf`);
+      printArea.style.display = "none";
+      printArea.innerHTML = "";
+      btn.textContent = origText;
+      btn.disabled = false;
+    }).catch(err => {
+      alert("PDF 생성 중 오류가 발생했습니다: " + err.message);
+      printArea.style.display = "none";
+      btn.textContent = origText;
+      btn.disabled = false;
+    });
+  }, 200);
+}
+
+// ── 결과 QR 공유 ──
+function showResultQR() {
+  const sid = state.currentSessionId;
+  const name = state.childName || "아동";
+  const age  = getAge();
+
+  let url;
+  if (sid) {
+    url = `https://christalmun-sarang.github.io/selsi/?sid=${sid}&name=${encodeURIComponent(name)}&age=${age}`;
+  } else {
+    // 바로검사 결과 — 세션 없으므로 결과 요약 파라미터로 전달
+    const sc = calcScores();
+    url = `https://christalmun-sarang.github.io/selsi/result.html?name=${encodeURIComponent(name)}&age=${age}&re=${sc.r.equiv}&ee=${sc.e.equiv}&rp=${sc.r.pct}&ep=${sc.e.pct}&ri=${sc.r.interp.cls}&ei=${sc.e.interp.cls}`;
+  }
+
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}&margin=10`;
+  const sc = calcScores();
+
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:22px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.28);overflow:hidden;">
+      <!-- 헤더 -->
+      <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;padding:18px 22px;">
+        <div style="font-size:17px;font-weight:800;margin-bottom:2px;">📲 결과지 QR 공유</div>
+        <div style="font-size:12px;opacity:0.85;">보호자 스마트폰으로 스캔하여 결과를 확인하세요</div>
+      </div>
+      <!-- 아동 정보 요약 -->
+      <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 22px;display:flex;gap:16px;">
+        <div style="font-size:13px;color:#475569;">
+          <span style="font-weight:700;color:#1e293b;">${name}</span>
+          <span style="color:#94a3b8;"> · </span>${age}개월
+        </div>
+        <div style="font-size:12px;color:#475569;">
+          수용 <strong style="color:#1e293b;">${sc.r.equiv}개월</strong> · 표현 <strong style="color:#1e293b;">${sc.e.equiv}개월</strong>
+        </div>
+      </div>
+      <!-- QR 코드 -->
+      <div style="padding:22px;text-align:center;">
+        <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;display:inline-block;margin-bottom:16px;">
+          <img src="${qrUrl}" width="200" height="200" style="display:block;border-radius:8px;"
+            onerror="this.parentElement.innerHTML='<div style=\\'padding:20px;color:#94a3b8;font-size:13px;\\'>QR 생성 실패<br>아래 링크를 복사해 주세요</div>'">
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px;">스캔하면 결과 요약 페이지로 연결됩니다</div>
+        <!-- 링크 복사 -->
+        <div style="background:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:11px;word-break:break-all;color:#334155;margin-bottom:14px;text-align:left;border:1px solid #e2e8f0;">
+          <div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:4px;text-transform:uppercase;">🔗 결과 공유 링크</div>
+          ${url}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="qr-copy-btn"
+            onclick="navigator.clipboard.writeText('${url}').then(()=>{document.getElementById('qr-copy-btn').textContent='✅ 복사됨!';setTimeout(()=>document.getElementById('qr-copy-btn').textContent='📋 링크 복사',2000)})"
+            style="flex:1;padding:11px;background:#6366f1;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+            📋 링크 복사
+          </button>
+          <button onclick="this.closest('div[style*=fixed]').remove()"
+            style="flex:1;padding:11px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+// ── 리셋 ──
+function resetAll() {
+  if (!confirm("모든 검사 데이터를 초기화하고 처음부터 다시 시작하시겠습니까?")) return;
+  state = {
+    currentPage:"intro", childName:"", birthYear:"", birthMonth:"",
+    gender:"", examiner:"", examDate:"",
+    activeTab:"receptive", activeGroup:"0-5", answers:{}
+  };
+  document.getElementById("childName").value = "";
+  document.getElementById("birthYear").value = "";
+  document.getElementById("birthMonth").value = "";
+  document.getElementById("examiner").value = "";
+  document.getElementById("examDate").value = new Date().toISOString().split("T")[0];
+  document.getElementById("btn-male").classList.remove("active");
+  document.getElementById("btn-female").classList.remove("active");
+  document.getElementById("ageChip").style.display = "none";
+  document.getElementById("age-over-msg").style.display = "none";
+  document.getElementById("btn-link-exam").disabled = true;
+  document.getElementById("btn-qr-exam").disabled = true;
+  document.getElementById("btn-direct-exam").disabled = true;
+  showIntro();
+}
+</script>
+
+<!-- ════ PDF 출력용 숨김 영역 ════ -->
+<div id="pdf-print-area" style="
+  position:fixed; left:-9999px; top:0;
+  width:794px; background:white;
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:13px; color:#1e293b;
+  padding:0; margin:0;
+"><!-- 동적으로 채워짐 --></div>
+
+<!-- ════ 검사 시작 안내 모달 ════ -->
+<div class="modal-overlay" id="guide-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-title">📋 검사 전 안내사항</div>
+      <div class="modal-header-sub">아래 내용을 꼭 읽고 검사를 시작해 주세요</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-guide-text">
+        다음 문항은 아이의 평소 <strong>언어 및 의사소통 능력</strong>을 확인하기 위한 질문입니다.<br><br>
+        각 항목을 읽고 아이가 현재 실제로 할 수 있는 경우 <strong>"가능"</strong>, 하지 못하거나 확실하지 않은 경우 <strong>"불가능"</strong>으로 표시해 주세요.
+      </div>
+
+      <div class="modal-criteria">
+        <div class="modal-criteria-title">✅ 체크 기준</div>
+        <ul>
+          <li>최근 1~2개월 동안의 평소 모습을 기준으로 합니다.</li>
+          <li>우연히 1회 했던 행동은 제외합니다.</li>
+          <li>반복적으로 안정적으로 할 수 있어야 "가능"입니다.</li>
+          <li>보호자가 시켜서 겨우 하는 경우보다는 자연스럽게 수행 가능한지를 기준으로 합니다.</li>
+          <li>확실하지 않으면 "불가능"으로 체크해 주세요.</li>
+          <li>아이가 현재 사용하는 행동/언어만 표시합니다.</li>
+        </ul>
+      </div>
+
+      <div class="modal-example">
+        <div class="modal-example-title">💡 예시</div>
+        <ul>
+          <li>이름 부르면 돌아본다 → 대부분 상황에서 반복적으로 가능하면 <strong>"가능"</strong></li>
+          <li>엄마 따라 "맘마"를 한 번 흉내냄 → 반복적 사용이 아니면 <strong>"불가능"</strong></li>
+        </ul>
+      </div>
+
+      <button class="modal-btn-ok" onclick="closeGuideModal()">✔ 확인했습니다 — 검사 시작</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
