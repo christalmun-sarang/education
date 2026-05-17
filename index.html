@@ -300,7 +300,7 @@
   <button class="tab-btn active" onclick="switchTab('tab-lecture', this)">📚 심층강의 교육</button>
   <button class="tab-btn" onclick="switchTab('tab-tab2', this)">🩺 성인교육</button>
   <button class="tab-btn" onclick="switchTab('tab-tab3', this)">🧒 SELSI 검사</button>
-  <button class="tab-btn" onclick="switchTab('tab-tab4', this)">탭 4</button>
+  <button class="tab-btn" onclick="switchTab('tab-tab4', this)">🌱 KASQ 검사</button>
 </nav>
 
 <!-- ══════════════════════════════════════════════
@@ -503,13 +503,15 @@
   ></iframe>
 </div>
 
-<!-- ══ TAB 4 ══ -->
-<div id="tab-tab4" class="tab-content">
-  <div class="coming-soon">
-    <div class="icon">🗂️</div>
-    <p>탭 4</p>
-    <small>준비 중입니다</small>
-  </div>
+<!-- ══ TAB 4 — KASQ ══ -->
+<div id="tab-tab4" class="tab-content" style="padding:0;">
+  <iframe
+    id="kasq-frame"
+    src="kasq_admin.html"
+    style="width:100%;height:calc(100vh - 112px);border:none;display:block;"
+    title="KASQ 영유아 발달 선별검사"
+    loading="lazy"
+  ></iframe>
 </div>
 
 <script>
@@ -519,9 +521,10 @@
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
 
-    // SELSI iframe 동적 높이 조정
-    if (id === 'tab-tab3') {
-      const frame = document.getElementById('selsi-frame');
+    // iframe 동적 높이 조정 (SELSI, KASQ 공통)
+    if (id === 'tab-tab3' || id === 'tab-tab4') {
+      const frameId = id === 'tab-tab3' ? 'selsi-frame' : 'kasq-frame';
+      const frame = document.getElementById(frameId);
       function setFrameHeight() {
         const headerH = document.querySelector('header').offsetHeight;
         const navH = document.querySelector('.tab-nav').offsetHeight;
@@ -534,12 +537,14 @@
 
   // 초기 로드 시 높이 설정 (다른 탭에서 돌아올 때도)
   window.addEventListener('load', () => {
-    const frame = document.getElementById('selsi-frame');
-    if (frame) {
-      const headerH = document.querySelector('header').offsetHeight;
-      const navH = document.querySelector('.tab-nav').offsetHeight;
-      frame.style.height = (window.innerHeight - headerH - navH) + 'px';
-    }
+    ['selsi-frame','kasq-frame'].forEach(fid => {
+      const frame = document.getElementById(fid);
+      if (frame) {
+        const headerH = document.querySelector('header').offsetHeight;
+        const navH = document.querySelector('.tab-nav').offsetHeight;
+        frame.style.height = (window.innerHeight - headerH - navH) + 'px';
+      }
+    });
   });
 </script>
 </body>
