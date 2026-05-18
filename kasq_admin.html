@@ -625,6 +625,57 @@
     resize: vertical;
     outline: none;
   }
+
+  /* 신체계측 양호/정밀 라디오 스타일 */
+  .meas-radio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    cursor: pointer;
+  }
+  .meas-radio-label input[type=radio] {
+    display: none;
+  }
+  .meas-ok-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1.5px solid #ccc;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    font-weight: 900;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .meas-ok-mark.active {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+  }
+  .meas-eval-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1.5px solid #ccc;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    font-weight: 900;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .meas-eval-mark.active {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+  }
 </style>
 </head>
 <body>
@@ -2288,6 +2339,8 @@ async function createSessionAndGetUrl() {
         session_id: sessionId,
         child_name: state.childName,
         child_age: getAgeMonths(),
+        birth_year: document.getElementById("inp-year") ? document.getElementById("inp-year").value : "",
+        birth_month: document.getElementById("inp-month") ? document.getElementById("inp-month").value : "",
         gender: state.gender,
         examiner: state.examiner,
         exam_date: state.examDate || new Date().toISOString().split("T")[0],
@@ -2994,40 +3047,40 @@ function renderReportForm(session) {
   <!-- 신체계측 -->
   <table>
     <tr>
-      <td rowspan="6" class="section-label">신체계측</td>
+      <td rowspan="4" class="section-label">신체계측</td>
       <td rowspan="2" style="text-align:center;font-weight:700;width:8%">키</td>
-      <td style="width:10%"><input type="number" placeholder="cm" style="width:60px"> cm</td>
-      <td style="width:5%">✓</td>
-      <td style="width:12%">양호</td>
+      <td style="width:12%"><input type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
+      <td style="width:4%;text-align:center"><label class="meas-radio-label"><input type="radio" name="r_height_judge" value="ok" checked onchange="updateMeasJudge('r_height_judge')"> <span class="meas-ok-mark" id="r_height_judge_ok">✓</span></label></td>
+      <td style="width:10%">양호</td>
       <td rowspan="2" style="text-align:center;font-weight:700;width:8%">몸무게</td>
-      <td style="width:10%"><input type="number" placeholder="kg" style="width:60px"> Kg</td>
-      <td style="width:5%">✓</td>
-      <td style="width:12%">양호</td>
+      <td style="width:12%"><input type="number" placeholder="kg" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> Kg</td>
+      <td style="width:4%;text-align:center"><label class="meas-radio-label"><input type="radio" name="r_weight_judge" value="ok" checked onchange="updateMeasJudge('r_weight_judge')"> <span class="meas-ok-mark" id="r_weight_judge_ok">✓</span></label></td>
+      <td style="width:10%">양호</td>
     </tr>
     <tr>
-      <td><input type="number" placeholder="p" style="width:60px"> p</td>
-      <td><input type="checkbox" id="r_height_eval"></td>
+      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_height_judge" value="eval" onchange="updateMeasJudge('r_height_judge')"> <span class="meas-eval-mark" id="r_height_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
-      <td><input type="number" placeholder="p" style="width:60px"> p</td>
-      <td><input type="checkbox" id="r_weight_eval"></td>
+      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_weight_judge" value="eval" onchange="updateMeasJudge('r_weight_judge')"> <span class="meas-eval-mark" id="r_weight_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
     </tr>
     <tr>
       <td rowspan="2" style="text-align:center;font-weight:700">머리둘레</td>
-      <td><input type="number" placeholder="cm" style="width:60px"> cm</td>
-      <td>✓</td>
+      <td><input type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_head_judge" value="ok" checked onchange="updateMeasJudge('r_head_judge')"> <span class="meas-ok-mark" id="r_head_judge_ok">✓</span></label></td>
       <td>양호</td>
       <td rowspan="2" style="text-align:center;font-weight:700">체질량지수</td>
-      <td><input type="number" placeholder="kg/m²" style="width:70px"> kg/m</td>
-      <td>✓</td>
+      <td><input type="number" placeholder="kg/m²" style="width:65px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> kg/m²</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_bmi_judge" value="ok" checked onchange="updateMeasJudge('r_bmi_judge')"> <span class="meas-ok-mark" id="r_bmi_judge_ok">✓</span></label></td>
       <td>양호</td>
     </tr>
     <tr>
-      <td><input type="number" placeholder="p" style="width:60px"> p</td>
-      <td><input type="checkbox" id="r_head_eval"></td>
+      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_head_judge" value="eval" onchange="updateMeasJudge('r_head_judge')"> <span class="meas-eval-mark" id="r_head_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
-      <td><input type="number" placeholder="p" style="width:60px"> p</td>
-      <td><input type="checkbox" id="r_bmi_eval"></td>
+      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_bmi_judge" value="eval" onchange="updateMeasJudge('r_bmi_judge')"> <span class="meas-eval-mark" id="r_bmi_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
     </tr>
   </table>
@@ -3187,12 +3240,6 @@ function renderReportForm(session) {
       <td colspan="3">사랑소아청소년과의원</td>
     </tr>
     <tr>
-      <td style="font-weight:700">요양기관번호</td>
-      <td>41341287</td>
-      <td style="font-weight:700">검진기관명</td>
-      <td colspan="3">사랑소아청소년과의원</td>
-    </tr>
-    <tr>
       <td style="font-weight:700">검진일</td>
       <td class="auto-fill">${session.exam_date || ""}</td>
       <td></td>
@@ -3205,6 +3252,8 @@ function renderReportForm(session) {
   </div>`;
 
   document.getElementById("report-form-content").innerHTML = html;
+  // 신체계측 라디오 초기 스타일 적용 (기본값 양호 = 빨간 체크)
+  setTimeout(() => initMeasJudge(), 50);
 }
 
 async function saveReport() {
@@ -3241,10 +3290,41 @@ function printReport() {
       .age-grid-check { display:flex; flex-wrap:wrap; gap:4px; padding:3px; }
       .age-grid-check label { display:flex; align-items:center; gap:2px; font-size:10px; white-space:nowrap; }
       .note-area { min-height:50px; width:100%; border:none; font-family:inherit; font-size:11px; }
+      .meas-ok-mark { display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;border:1.5px solid #ccc;background:white;color:#333;font-size:13px;font-weight:900; }
+      .meas-ok-mark.active { background:#dc2626;border-color:#dc2626;color:white; }
+      .meas-eval-mark { display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;border:1.5px solid #ccc;background:white;color:#333;font-size:13px;font-weight:900; }
+      .meas-eval-mark.active { background:#dc2626;border-color:#dc2626;color:white; }
+      .meas-radio-label input[type=radio] { display:none; }
       @media print { @page { margin: 8mm; size: A4; } }
     </style></head><body>${content.outerHTML}</body></html>`);
   win.document.close();
   setTimeout(() => { win.focus(); win.print(); }, 500);
+}
+
+// ──────────────────────────────────────────
+// 신체계측 양호/정밀 라디오 토글
+// ──────────────────────────────────────────
+function updateMeasJudge(name) {
+  const radios = document.querySelectorAll(`input[name="${name}"]`);
+  radios.forEach(r => {
+    const val = r.value; // "ok" or "eval"
+    const spanId = `${name}_${val}`;
+    const span = document.getElementById(spanId);
+    if (!span) return;
+    if (r.checked) {
+      span.classList.add("active");
+      span.textContent = "✓";
+    } else {
+      span.classList.remove("active");
+      span.textContent = val === "ok" ? "✓" : "□";
+    }
+  });
+}
+
+function initMeasJudge() {
+  ["r_height_judge","r_weight_judge","r_head_judge","r_bmi_judge"].forEach(name => {
+    updateMeasJudge(name);
+  });
 }
 </script>
 </body>
