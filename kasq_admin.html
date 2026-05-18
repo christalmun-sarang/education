@@ -472,6 +472,159 @@
   @media print {
     .app-header, .main-tabs, .btn-row, .action-row { display: none !important; }
   }
+
+  /* ── 검사결과 통보서 스타일 ── */
+  .result-sheet {
+    background: white;
+    border: 2px solid #333;
+    padding: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: #000;
+  }
+  .result-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .result-sheet td, .result-sheet th {
+    border: 1px solid #555;
+    padding: 4px 6px;
+    vertical-align: middle;
+    text-align: center;
+  }
+  .result-sheet .sheet-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 900;
+    padding: 12px;
+    border-bottom: 2px solid #333;
+  }
+  .result-sheet .sheet-age-badge {
+    float: right;
+    background: #fbbf24;
+    border: 2px solid #333;
+    padding: 4px 10px;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 6px;
+  }
+  .result-sheet .auto-fill {
+    background: #fef08a;
+  }
+  .result-sheet .domain-header {
+    background: #e5e7eb;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .result-sheet .score-row {
+    background: #fff;
+    font-weight: 700;
+  }
+  .result-sheet .cutoff-row {
+    background: #f3f4f6;
+    font-size: 11px;
+  }
+  .result-sheet .question-cell {
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 5px 8px;
+  }
+  .result-sheet .extra-section {
+    background: #fef9c3;
+    border-top: 2px solid #ca8a04;
+  }
+  .result-sheet .footer-row td {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px;
+  }
+
+  /* ── 보고서작성 스타일 (사진3 형식) ── */
+  .report-sheet {
+    background: white;
+    border: 2px solid #333;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding: 0;
+  }
+  .report-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .report-sheet td, .report-sheet th {
+    border: 1px solid #666;
+    padding: 5px 7px;
+    vertical-align: middle;
+  }
+  .report-sheet .auto-fill {
+    background: #fef08a;
+    text-align: center;
+    font-weight: 700;
+  }
+  .report-sheet .section-label {
+    background: #f3f4f6;
+    font-weight: 800;
+    text-align: center;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 3px;
+    width: 30px;
+    font-size: 12px;
+  }
+  .report-sheet .check-cell {
+    text-align: center;
+  }
+  .report-sheet .check-cell input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  .report-sheet .input-cell input[type=text],
+  .report-sheet .input-cell input[type=number],
+  .report-sheet .input-cell textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+  .report-sheet .title-row {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 900;
+    padding: 10px;
+    border-bottom: 2px solid #333;
+  }
+  .report-sheet .highlight {
+    background: #fef08a;
+  }
+  .report-sheet .age-grid-check {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+  }
+  .report-sheet .age-grid-check label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .report-sheet .note-area {
+    min-height: 60px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+  }
 </style>
 </head>
 <body>
@@ -489,7 +642,8 @@
 <main class="main">
   <div class="main-tabs">
     <button class="main-tab-btn active" id="tab-exam-btn" onclick="switchMainTab('exam')">📋 검사 등록</button>
-    <button class="main-tab-btn" id="tab-results-btn" onclick="switchMainTab('results')">📊 검사 결과</button>
+    <button class="main-tab-btn" id="tab-results-btn" onclick="switchMainTab('results')">📊 검사결과</button>
+    <button class="main-tab-btn" id="tab-report-btn" onclick="switchMainTab('report')">📝 보고서작성</button>
   </div>
 
   <!-- 검사 등록 패널 -->
@@ -576,7 +730,7 @@
     </div>
   </div>
 
-  <!-- 결과 조회 패널 -->
+  <!-- 검사결과 패널 -->
   <div id="panel-results" style="display:none;">
     <div class="card">
       <div class="card-title">📊 검사 결과 관리</div>
@@ -589,6 +743,38 @@
       <div id="session-list">
         <div class="empty-state">📋 검사 결과를 불러오는 중...</div>
       </div>
+    </div>
+    <!-- 검사결과 통보서 (사진2 형식) -->
+    <div id="result-sheet-area" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="closeResultSheet()">← 목록으로</button>
+        <button class="btn-primary" onclick="printResultSheet()">🖨 인쇄 / PDF</button>
+      </div>
+      <div id="result-sheet-content"></div>
+    </div>
+  </div>
+
+  <!-- 보고서작성 패널 -->
+  <div id="panel-report" style="display:none;">
+    <div class="card">
+      <div class="card-title">📝 보고서 작성 대상 선택</div>
+      <div class="filter-row">
+        <button class="filter-btn" id="rfilter-all" onclick="setReportFilter('all')">전체</button>
+        <button class="filter-btn" id="rfilter-completed" onclick="setReportFilter('completed')">완료</button>
+      </div>
+      <button class="btn-secondary" onclick="loadReportList()" style="margin-bottom:14px;">🔄 새로고침</button>
+      <div id="report-session-list">
+        <div class="empty-state">📋 검사 목록을 불러오는 중...</div>
+      </div>
+    </div>
+    <!-- 보고서 양식 (사진3 형식) -->
+    <div id="report-form-area" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="closeReportForm()">← 목록으로</button>
+        <button class="btn-primary" onclick="saveReport()">💾 저장</button>
+        <button class="btn-primary" onclick="printReport()" style="background:var(--green);">🖨 인쇄 / PDF</button>
+      </div>
+      <div id="report-form-content"></div>
     </div>
   </div>
 </main>
@@ -2285,6 +2471,8 @@ async function submitDirectExam() {
     session_id: sessionId,
     child_name: state.childName,
     child_age: getAgeMonths(),
+    birth_year: document.getElementById("inp-year") ? document.getElementById("inp-year").value : "",
+    birth_month: document.getElementById("inp-month") ? document.getElementById("inp-month").value : "",
     gender: state.gender,
     examiner: state.examiner,
     exam_date: state.examDate,
@@ -2302,7 +2490,8 @@ async function submitDirectExam() {
   }
 
   closeDirectExam();
-  showResultDetail(resultData);
+  switchMainTab("results");
+  showResultSheet(resultData);
 }
 
 // ──────────────────────────────────────────
@@ -2342,7 +2531,7 @@ function renderSessionList() {
     : allSessions.filter(s => s.status === currentFilter);
   if (!filtered.length) { el.innerHTML = '<div class="empty-state">검사 결과가 없습니다</div>'; return; }
   el.innerHTML = filtered.map(s => `
-    <div class="session-item" onclick='showResultDetail(${JSON.stringify(s)})'>
+    <div class="session-item" onclick='showResultSheet(${JSON.stringify(s)})'>
       <div class="session-avatar ${s.gender === "여" ? "avatar-f" : "avatar-m"}">${s.gender === "여" ? "👧" : "👦"}</div>
       <div class="session-info">
         <div class="session-name">${s.child_name}</div>
@@ -2501,9 +2690,561 @@ async function savePDF() {
 function switchMainTab(tab) {
   document.getElementById("tab-exam-btn").classList.toggle("active", tab === "exam");
   document.getElementById("tab-results-btn").classList.toggle("active", tab === "results");
+  document.getElementById("tab-report-btn").classList.toggle("active", tab === "report");
   document.getElementById("panel-exam").style.display = tab === "exam" ? "block" : "none";
   document.getElementById("panel-results").style.display = tab === "results" ? "block" : "none";
+  document.getElementById("panel-report").style.display = tab === "report" ? "block" : "none";
   if (tab === "results") loadSessionList();
+  if (tab === "report") loadReportList();
+}
+
+// ──────────────────────────────────────────
+// 검사결과 통보서 (사진2 형식)
+// ──────────────────────────────────────────
+function showResultSheet(session) {
+  document.getElementById("session-list").closest(".card").style.display = "none";
+  const el = document.getElementById("result-sheet-area");
+  el.style.display = "block";
+  el.scrollIntoView({ behavior: "smooth" });
+  renderResultSheet(session);
+}
+
+function closeResultSheet() {
+  document.getElementById("result-sheet-area").style.display = "none";
+  document.getElementById("session-list").closest(".card").style.display = "block";
+}
+
+function printResultSheet() {
+  const content = document.getElementById("result-sheet-content").innerHTML;
+  const win = window.open("", "_blank");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+      body { font-family: 'Noto Sans KR', sans-serif; margin: 10mm; }
+      table { width:100%; border-collapse:collapse; }
+      td, th { border:1px solid #555; padding:4px 6px; vertical-align:middle; text-align:center; font-size:11px; }
+      .auto-fill { background:#fef08a; }
+      .domain-header { background:#e5e7eb; font-weight:800; }
+      .extra-section { background:#fef9c3; border-top:2px solid #ca8a04; }
+      .question-cell { text-align:left; font-size:11px; line-height:1.4; padding:4px 6px; }
+      .sheet-title { text-align:center; font-size:18px; font-weight:900; padding:10px; border-bottom:2px solid #333; }
+      .sheet-age-badge { float:right; background:#fbbf24; border:2px solid #333; padding:3px 8px; font-size:13px; font-weight:800; border-radius:4px; }
+      @media print { @page { margin: 10mm; size: A4; } }
+    </style></head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 500);
+}
+
+function renderResultSheet(session) {
+  const data = KASQ_DATA[session.age_key];
+  if (!data) { document.getElementById("result-sheet-content").innerHTML = '<p>데이터 없음</p>'; return; }
+  const scores = session.scores || {};
+  const answers = session.answers || {};
+  const extra = session.extra_answers || {};
+
+  // 점수 해석
+  const LABELS = ["심화평가 권고","추적검사 요망","또래수준","빠른수준"];
+  function interpLabel(score, cutoffs) {
+    if (score < cutoffs[0]) return LABELS[0];
+    if (score < cutoffs[1]) return LABELS[1];
+    if (score < cutoffs[2]) return LABELS[2];
+    return LABELS[3];
+  }
+  function interpColor(score, cutoffs) {
+    if (score < cutoffs[0]) return "#fecaca";
+    if (score < cutoffs[1]) return "#fef3c7";
+    if (score < cutoffs[2]) return "#dbeafe";
+    return "#dcfce7";
+  }
+
+  const domains = data.domains;
+  // 커트오프 row: "컷포인트" 형식: c1~c2~c3 → "0~c1미만 / c1~c2미만 / c2~c3미만"
+  // build header row for domains (2 columns = 2 domains per row if 6 domains)
+  const halfLen = Math.ceil(domains.length / 2);
+  const leftDomains = domains.slice(0, halfLen);
+  const rightDomains = domains.slice(halfLen);
+
+  let headerHtml = `
+  <div class="result-sheet" id="print-result-sheet">
+  <div class="sheet-title">
+    <span class="sheet-age-badge">(${data.label}용)</span>
+    영유아 건강검진 결과 통보서
+  </div>
+  <table>
+    <tr>
+      <td style="width:10%">성명</td>
+      <td class="auto-fill" style="width:20%">${session.child_name || ""}</td>
+      <td style="width:10%">출생연도</td>
+      <td class="auto-fill" style="width:15%">${session.birth_year || ""}</td>
+      <td style="width:10%">출생월</td>
+      <td class="auto-fill" style="width:10%">${session.birth_month ? session.birth_month + "월" : ""}</td>
+      <td style="width:10%">검사일</td>
+      <td class="auto-fill">${session.exam_date || ""}</td>
+    </tr>
+  </table>`;
+
+  // 점수 요약 테이블
+  let scoreTableHtml = `<table><tr><td></td>`;
+  domains.forEach(d => { scoreTableHtml += `<th style="font-size:12px">${d}</th>`; });
+  scoreTableHtml += `</tr>
+  <tr><td style="font-size:12px;font-weight:700">총점</td>`;
+  domains.forEach(d => {
+    const sc = scores[d] || 0;
+    const co = data.cutoff[d] || [0,0,0];
+    scoreTableHtml += `<td class="auto-fill" style="font-weight:700">${sc}</td>`;
+  });
+  scoreTableHtml += `</tr>
+  <tr><td style="font-size:12px;font-weight:700">컷포인트</td>`;
+  domains.forEach(d => {
+    const co = data.cutoff[d] || [0,0,0];
+    scoreTableHtml += `<td style="font-size:11px">${co[0]}~${co[1]-1}&nbsp;/&nbsp;${co[1]}~${co[2]-1}&nbsp;/&nbsp;${co[2]}~</td>`;
+  });
+  scoreTableHtml += `</tr>
+  <tr><td style="font-size:12px;font-weight:700">해석</td>`;
+  domains.forEach(d => {
+    const sc = scores[d] || 0;
+    const co = data.cutoff[d] || [0,0,0];
+    const label = interpLabel(sc, co);
+    const color = interpColor(sc, co);
+    scoreTableHtml += `<td style="background:${color};font-weight:700;font-size:12px">${label}</td>`;
+  });
+  scoreTableHtml += `</tr></table>`;
+
+  // 문항별 상세 테이블 (2열 구성)
+  let itemsHtml = `<table>`;
+  const maxRows = Math.max(...domains.map(d => (data.items[d] || []).length));
+
+  // 2열로 나눠서 도메인 표시 (좌: 대근육/인지/사회성, 우: 소근육/언어/자조)
+  const leftD = domains.filter((_, i) => i % 2 === 0);
+  const rightD = domains.filter((_, i) => i % 2 === 1);
+
+  for (let di = 0; di < leftD.length; di++) {
+    const dl = leftD[di];
+    const dr = rightD[di] || null;
+    const leftItems = data.items[dl] || [];
+    const rightItems = dr ? (data.items[dr] || []) : [];
+    const rowCount = Math.max(leftItems.length, rightItems.length);
+
+    // domain header
+    itemsHtml += `<tr class="domain-header">
+      <td colspan="2" style="background:#d1d5db">${dl}</td>
+      <td colspan="2" style="background:#d1d5db">${dr ? dr : ""}</td>
+    </tr>`;
+
+    for (let ri = 0; ri < rowCount; ri++) {
+      const li = leftItems[ri];
+      const ri2 = rightItems[ri];
+      const lKey = `${dl}_${ri}`;
+      const rKey = dr ? `${dr}_${ri}` : null;
+      const lScore = answers[lKey] !== undefined ? ["","하못","할수","잘할"][answers[lKey]] || answers[lKey] : "";
+      const rScore = (rKey && answers[rKey] !== undefined) ? ["","하못","할수","잘할"][answers[rKey]] || answers[rKey] : "";
+      const lScoreNum = answers[lKey] || "";
+      const rScoreNum = (rKey && answers[rKey] !== undefined) ? answers[rKey] : "";
+
+      const scoreToText = (v) => {
+        if (v === 1) return "1 (하지 못하는 편이다)";
+        if (v === 2) return "2 (할 수 있는 편이다)";
+        if (v === 3) return "3 (잘 할 수 있다)";
+        return "";
+      };
+
+      itemsHtml += `<tr>
+        <td class="question-cell" style="width:35%">${ri + 1}. ${li || ""}</td>
+        <td class="auto-fill" style="width:15%;font-size:11px">${scoreToText(lScoreNum)}</td>
+        <td class="question-cell" style="width:35%">${ri + 1}. ${ri2 || ""}</td>
+        <td class="${rKey ? "auto-fill" : ""}" style="width:15%;font-size:11px">${ri2 ? scoreToText(rScoreNum) : ""}</td>
+      </tr>`;
+    }
+  }
+  itemsHtml += `</table>`;
+
+  // 추가 질문 섹션
+  let extraHtml = "";
+  if (data.extra && data.extra.length > 0) {
+    extraHtml = `<table><tr class="extra-section"><th colspan="4" style="background:#fef9c3;font-size:12px;font-weight:800">추가질문</th></tr>`;
+    const el2 = data.extra;
+    const halfE = Math.ceil(el2.length / 2);
+    for (let i = 0; i < halfE; i++) {
+      const q1 = el2[i];
+      const q2 = el2[i + halfE] || null;
+      const a1 = extra[i] !== undefined ? (extra[i] ? "예" : "아니오") : "";
+      const a2 = (q2 && extra[i + halfE] !== undefined) ? (extra[i + halfE] ? "예" : "아니오") : "";
+      extraHtml += `<tr>
+        <td class="question-cell" style="width:35%">${i + 1}. ${q1}</td>
+        <td class="auto-fill" style="width:15%;font-weight:700">${a1}</td>
+        <td class="question-cell" style="width:35%">${q2 ? (i + halfE + 1) + ". " + q2 : ""}</td>
+        <td class="${q2 ? "auto-fill" : ""}" style="width:15%;font-weight:700">${q2 ? a2 : ""}</td>
+      </tr>`;
+    }
+    extraHtml += `</table>`;
+  }
+
+  // 서명란
+  const footerHtml = `<table>
+    <tr class="footer-row">
+      <td style="width:25%">사랑소아청소년과의원</td>
+      <td style="width:40%"></td>
+      <td style="width:15%">원장</td>
+      <td style="width:20%">문수정</td>
+    </tr>
+  </table>`;
+
+  document.getElementById("result-sheet-content").innerHTML =
+    headerHtml + scoreTableHtml + itemsHtml + extraHtml + footerHtml + `</div>`;
+}
+
+// ──────────────────────────────────────────
+// 보고서작성 (사진3 형식)
+// ──────────────────────────────────────────
+let reportFilter = "completed";
+
+async function loadReportList() {
+  const el = document.getElementById("report-session-list");
+  el.innerHTML = '<div class="empty-state">🔄 불러오는 중...</div>';
+  try {
+    const rows = await sbFetch("kasq_sessions?select=*&order=created_at.desc&limit=50");
+    const filtered = reportFilter === "all" ? (rows || []) : (rows || []).filter(s => s.status === "completed");
+    if (!filtered.length) { el.innerHTML = '<div class="empty-state">검사 결과가 없습니다</div>'; return; }
+    el.innerHTML = filtered.map(s => `
+      <div class="session-item" onclick='openReportForm(${JSON.stringify(s)})'>
+        <div class="session-avatar ${s.gender === "여" ? "avatar-f" : "avatar-m"}">${s.gender === "여" ? "👧" : "👦"}</div>
+        <div class="session-info">
+          <div class="session-name">${s.child_name}</div>
+          <div class="session-meta">${s.child_age} · ${s.examiner || ""} · ${s.exam_date || ""}</div>
+        </div>
+        <span class="badge badge-done">보고서 작성 →</span>
+      </div>
+    `).join("");
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ 불러오기 실패: ${e.message}</div>`;
+  }
+}
+
+function setReportFilter(f) {
+  reportFilter = f;
+  ["all","completed"].forEach(id => {
+    const btn = document.getElementById("rfilter-" + id);
+    if (btn) {
+      btn.style.background = id === f ? "var(--primary)" : "";
+      btn.style.color = id === f ? "white" : "";
+      btn.style.borderColor = id === f ? "var(--primary)" : "";
+    }
+  });
+  loadReportList();
+}
+
+let _currentReportSession = null;
+
+function openReportForm(session) {
+  _currentReportSession = session;
+  document.getElementById("report-session-list").closest(".card").style.display = "none";
+  const el = document.getElementById("report-form-area");
+  el.style.display = "block";
+  el.scrollIntoView({ behavior: "smooth" });
+  renderReportForm(session);
+}
+
+function closeReportForm() {
+  document.getElementById("report-form-area").style.display = "none";
+  document.getElementById("report-session-list").closest(".card").style.display = "block";
+}
+
+function renderReportForm(session) {
+  const data = KASQ_DATA[session.age_key];
+  const scores = session.scores || {};
+  const savedReport = session.report_data ? (typeof session.report_data === "string" ? JSON.parse(session.report_data) : session.report_data) : {};
+
+  // 키/몸무게/머리둘레 등 신체계측 항목
+  const ageParts = (session.age_key || "").split("-");
+  const ageLabel = data ? data.label : session.child_age + "개월";
+
+  // K-ASQ 체크 항목 (도메인별 추후검사 여부)
+  const domains = data ? data.domains : [];
+
+  // 모든 연령 구간
+  const allAges = ["4-5","6-7","8-9","10-11","12-13","14-15","16-17","18-19","20-21","22-23","24-26","27-29","30-32","33-35","36-41","42-47","48-53","54-59","60-65","66-71"];
+  const allAgeLabels = {"4-5":"4~5M","6-7":"6~7M","8-9":"8~9M","10-11":"10~11M","12-13":"12~13M","14-15":"14~15M","16-17":"16~17M","18-19":"18~19M","20-21":"20~21M","22-23":"22~23M","24-26":"24~26M","27-29":"27~29M","30-32":"30~32M","33-35":"33~35M","36-41":"36~41M","42-47":"42~47M","48-53":"48~53M","54-59":"54~59M","60-65":"60~65M","66-71":"66~71M"};
+
+  // 각 도메인 결과 해석
+  function interpLabel(score, cutoffs) {
+    if (score < cutoffs[0]) return "심화평가필요";
+    if (score < cutoffs[1]) return "추후검사";
+    if (score < cutoffs[2]) return "양호";
+    return "양호";
+  }
+  function isFollowUp(score, cutoffs) {
+    return score < cutoffs[1];
+  }
+
+  let html = `<div class="report-sheet" id="print-report-sheet"><table>
+    <tr><td colspan="10" class="title-row">
+      영유아 건강검진 결과 통보서
+      <span style="float:right;background:#fbbf24;border:2px solid #333;padding:3px 8px;font-size:13px;font-weight:800;border-radius:4px;">(${ageLabel}용)</span>
+    </td></tr>
+    <tr>
+      <td style="width:8%">성명</td>
+      <td class="auto-fill" style="width:15%">${session.child_name||""}</td>
+      <td style="width:10%">출생연도</td>
+      <td class="auto-fill" style="width:13%">${session.birth_year||""}</td>
+      <td style="width:8%">출생월</td>
+      <td class="auto-fill" colspan="5">${session.birth_month ? session.birth_month+"월" : ""}</td>
+    </tr>
+  </table>
+
+  <!-- 신체계측 -->
+  <table>
+    <tr>
+      <td rowspan="6" class="section-label">신체계측</td>
+      <td rowspan="2" style="text-align:center;font-weight:700;width:8%">키</td>
+      <td style="width:10%"><input type="number" placeholder="cm" style="width:60px"> cm</td>
+      <td style="width:5%">✓</td>
+      <td style="width:12%">양호</td>
+      <td rowspan="2" style="text-align:center;font-weight:700;width:8%">몸무게</td>
+      <td style="width:10%"><input type="number" placeholder="kg" style="width:60px"> Kg</td>
+      <td style="width:5%">✓</td>
+      <td style="width:12%">양호</td>
+    </tr>
+    <tr>
+      <td><input type="number" placeholder="p" style="width:60px"> p</td>
+      <td><input type="checkbox" id="r_height_eval"></td>
+      <td>정밀평가필요</td>
+      <td><input type="number" placeholder="p" style="width:60px"> p</td>
+      <td><input type="checkbox" id="r_weight_eval"></td>
+      <td>정밀평가필요</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="text-align:center;font-weight:700">머리둘레</td>
+      <td><input type="number" placeholder="cm" style="width:60px"> cm</td>
+      <td>✓</td>
+      <td>양호</td>
+      <td rowspan="2" style="text-align:center;font-weight:700">체질량지수</td>
+      <td><input type="number" placeholder="kg/m²" style="width:70px"> kg/m</td>
+      <td>✓</td>
+      <td>양호</td>
+    </tr>
+    <tr>
+      <td><input type="number" placeholder="p" style="width:60px"> p</td>
+      <td><input type="checkbox" id="r_head_eval"></td>
+      <td>정밀평가필요</td>
+      <td><input type="number" placeholder="p" style="width:60px"> p</td>
+      <td><input type="checkbox" id="r_bmi_eval"></td>
+      <td>정밀평가필요</td>
+    </tr>
+  </table>
+
+  <!-- 신체진찰소견 -->
+  <table>
+    <tr>
+      <td rowspan="6" class="section-label">신체진찰소견</td>
+      ${["전신상태","머리","안면","눈","코"].map(item => `
+        <td style="font-weight:700;width:8%">${item}</td>
+        <td style="width:4%"><input type="checkbox" checked></td><td style="width:7%">양호</td>
+        <td style="width:4%"><input type="checkbox"></td><td style="width:7%">이상</td>
+        <td style="width:4%"><input type="checkbox"></td><td style="width:8%">해당없음</td>
+      `).slice(0,1).join("")}
+      ${["귀"].map(item => `
+        <td style="font-weight:700;width:8%">${item}</td>
+        <td><input type="checkbox" checked></td><td>양호</td>
+        <td><input type="checkbox"></td><td>이상</td>
+        <td><input type="checkbox"></td><td>해당없음</td>
+      `).join("")}
+    </tr>
+    <tr>
+      <td style="font-weight:700">머리</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+      <td style="font-weight:700">목</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">안면</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+      <td style="font-weight:700">폐</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">눈</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+      <td style="font-weight:700">심장</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">코</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+      <td style="font-weight:700">복부</td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>이상</td>
+      <td><input type="checkbox"></td><td>해당없음</td>
+    </tr>
+  </table>
+
+  <!-- 시력검사 -->
+  <table>
+    <tr>
+      <td style="font-weight:700;width:12%">시력검사</td>
+      <td><input type="checkbox"></td><td>그림시력표</td>
+      <td><input type="checkbox" checked></td><td>숫자시력표</td>
+      <td style="font-weight:700">좌측</td>
+      <td style="width:10%"><input type="text" placeholder="시력" style="width:60px"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="checkbox" checked></td><td>양호</td>
+      <td><input type="checkbox"></td><td>정밀평가필요</td>
+      <td style="font-weight:700">우측</td>
+      <td><input type="text" placeholder="시력" style="width:60px"></td>
+    </tr>
+  </table>
+
+  <!-- 발달평가 K-ASQ 연령 선택 -->
+  <table>
+    <tr>
+      <td rowspan="4" style="font-weight:700;text-align:center;width:10%">발달평가</td>
+      <td rowspan="4" style="font-weight:700;text-align:center;width:12%">K-ASQ 사용시</td>
+      <td colspan="8">
+        <div class="age-grid-check">
+          ${allAges.map(ak => `<label><input type="checkbox" ${ak === session.age_key ? "checked" : ""}> ${allAgeLabels[ak]||ak}</label>`).join("")}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- K-ASQ 결과 -->
+  <table>
+    <tr>
+      <td><input type="checkbox" checked></td>
+      <td colspan="2" style="font-weight:800;background:#fef08a">K-ASQ</td>
+      <td><input type="checkbox" ${data && domains.every(d => !isFollowUp(scores[d]||0, data.cutoff[d]||[0,0,0])) ? "checked" : ""}></td>
+      <td colspan="8">양호</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="2" style="font-weight:700">추후검사</td>
+      ${data ? domains.map(d => {
+        const sc = scores[d] || 0;
+        const co = data.cutoff[d] || [0,0,0];
+        const needFollow = isFollowUp(sc, co);
+        return `<td><input type="checkbox" ${needFollow ? "checked" : ""}></td><td class="${needFollow ? "auto-fill" : ""}">${d}</td>`;
+      }).join("") : "<td colspan='6'></td>"}
+    </tr>
+    <tr>
+      <td><input type="checkbox"></td>
+      <td colspan="2" style="font-weight:700">DENVER</td>
+      <td><input type="checkbox"></td><td>정밀검사필요</td>
+      <td><input type="checkbox"></td><td>대근육운동</td>
+      <td><input type="checkbox"></td><td>소근육운동</td>
+      <td><input type="checkbox"></td><td>인지</td>
+    </tr>
+    <tr>
+      <td></td><td colspan="2"></td>
+      <td><input type="checkbox"></td><td>언어</td>
+      <td><input type="checkbox"></td><td>사회성</td>
+      <td><input type="checkbox"></td><td>자조</td>
+      <td colspan="2"></td>
+    </tr>
+  </table>
+
+  <!-- 종합판정 -->
+  <table>
+    <tr>
+      <td style="font-weight:800;width:12%">종합판정</td>
+      <td style="background:#fef08a"><input type="checkbox" id="r_judge_ok" ${data && domains.every(d => !isFollowUp(scores[d]||0, data.cutoff[d]||[0,0,0])) ? "checked" : ""}></td>
+      <td class="auto-fill" style="width:18%">양호</td>
+      <td><input type="checkbox"></td>
+      <td style="width:18%">주의</td>
+      <td><input type="checkbox"></td>
+      <td>정밀평가필요</td>
+    </tr>
+  </table>
+
+  <!-- 소견 및 조치사항 -->
+  <table>
+    <tr>
+      <td style="font-weight:800;width:15%">소견 및 조치사항</td>
+      <td><textarea class="note-area" id="r_notes" placeholder="소견 및 조치사항을 입력하세요">${savedReport.notes || ""}</textarea></td>
+    </tr>
+  </table>
+
+  <!-- 기관 정보 -->
+  <table>
+    <tr>
+      <td style="font-weight:700;width:12%">요양기관번호</td>
+      <td style="width:18%">41341287</td>
+      <td style="font-weight:700;width:12%">검진기관명</td>
+      <td colspan="3">사랑소아청소년과의원</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">요양기관번호</td>
+      <td>41341287</td>
+      <td style="font-weight:700">검진기관명</td>
+      <td colspan="3">사랑소아청소년과의원</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">검진일</td>
+      <td class="auto-fill">${session.exam_date || ""}</td>
+      <td></td>
+      <td style="font-weight:700">의사</td>
+      <td>문수정</td>
+      <td style="font-weight:700">면허번호</td>
+      <td>63165</td>
+    </tr>
+  </table>
+  </div>`;
+
+  document.getElementById("report-form-content").innerHTML = html;
+}
+
+async function saveReport() {
+  if (!_currentReportSession) return;
+  const notes = document.getElementById("r_notes") ? document.getElementById("r_notes").value : "";
+  const reportData = {
+    notes,
+    saved_at: new Date().toISOString()
+  };
+  try {
+    await sbFetch(`kasq_sessions?session_id=eq.${_currentReportSession.session_id}`, {
+      method: "PATCH",
+      body: { report_data: JSON.stringify(reportData) }
+    });
+    alert("보고서가 저장되었습니다.");
+  } catch(e) {
+    alert("저장 실패: " + e.message);
+  }
+}
+
+function printReport() {
+  const content = document.getElementById("print-report-sheet");
+  if (!content) return;
+  const win = window.open("", "_blank");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+      body { font-family: 'Noto Sans KR', sans-serif; margin: 8mm; font-size:11px; }
+      table { width:100%; border-collapse:collapse; margin-bottom:0; }
+      td, th { border:1px solid #666; padding:4px 6px; vertical-align:middle; font-size:11px; }
+      .auto-fill { background:#fef08a; }
+      .title-row { text-align:center; font-size:16px; font-weight:900; padding:8px; border-bottom:2px solid #333; }
+      .section-label { background:#f3f4f6; font-weight:800; text-align:center; writing-mode:vertical-rl; text-orientation:upright; letter-spacing:3px; width:28px; font-size:11px; }
+      .age-grid-check { display:flex; flex-wrap:wrap; gap:4px; padding:3px; }
+      .age-grid-check label { display:flex; align-items:center; gap:2px; font-size:10px; white-space:nowrap; }
+      .note-area { min-height:50px; width:100%; border:none; font-family:inherit; font-size:11px; }
+      @media print { @page { margin: 8mm; size: A4; } }
+    </style></head><body>${content.outerHTML}</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 500);
 }
 </script>
 </body>
