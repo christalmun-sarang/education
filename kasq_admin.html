@@ -2520,12 +2520,15 @@ async function submitDirectExam() {
   });
 
   const sessionId = genSessionId();
-  const resultData = {
+  const birthYear = document.getElementById("inp-year") ? document.getElementById("inp-year").value : "";
+  const birthMonth = document.getElementById("inp-month") ? document.getElementById("inp-month").value : "";
+
+  const dbData = {
     session_id: sessionId,
     child_name: state.childName,
     child_age: getAgeMonths(),
-    birth_year: document.getElementById("inp-year") ? document.getElementById("inp-year").value : "",
-    birth_month: document.getElementById("inp-month") ? document.getElementById("inp-month").value : "",
+    birth_year: birthYear,
+    birth_month: birthMonth,
     gender: state.gender,
     examiner: state.examiner,
     exam_date: state.examDate,
@@ -2535,9 +2538,11 @@ async function submitDirectExam() {
     extra_answers: state.directExtra,
     scores: scores
   };
+  // 결과 표시용 객체 (birth_year/month 포함)
+  const resultData = { ...dbData };
 
   try {
-    await sbFetch("kasq_sessions", { method: "POST", body: resultData });
+    await sbFetch("kasq_sessions", { method: "POST", body: dbData });
   } catch(e) {
     console.warn("Supabase 저장 실패:", e.message);
   }
@@ -2788,6 +2793,25 @@ function printResultSheet() {
   setTimeout(() => { win.focus(); win.print(); }, 500);
 }
 
+// ──────────────────────────────────────────
+// 출생연도/월 역산 헬퍼 (exam_date - child_age개월)
+// ──────────────────────────────────────────
+function calcBirth(session) {
+  // 먼저 직접 저장된 값 우선 사용
+  if (session.birth_year) {
+    return { year: session.birth_year, month: session.birth_month ? session.birth_month + "월" : "" };
+  }
+  // exam_date와 child_age(개월)로 역산
+  const examDate = session.exam_date ? new Date(session.exam_date) : new Date();
+  const ageMonths = parseInt(session.child_age) || 0;
+  const birthDate = new Date(examDate);
+  birthDate.setMonth(birthDate.getMonth() - ageMonths);
+  return {
+    year: birthDate.getFullYear().toString(),
+    month: (birthDate.getMonth() + 1) + "월"
+  };
+}
+
 function renderResultSheet(session) {
   const data = KASQ_DATA[session.age_key];
   if (!data) { document.getElementById("result-sheet-content").innerHTML = '<p>데이터 없음</p>'; return; }
@@ -2817,6 +2841,7 @@ function renderResultSheet(session) {
   const leftDomains = domains.slice(0, halfLen);
   const rightDomains = domains.slice(halfLen);
 
+  const birth = calcBirth(session);
   let headerHtml = `
   <div class="result-sheet" id="print-result-sheet">
   <div class="sheet-title">
@@ -2828,9 +2853,9 @@ function renderResultSheet(session) {
       <td style="width:10%">성명</td>
       <td class="auto-fill" style="width:20%">${session.child_name || ""}</td>
       <td style="width:10%">출생연도</td>
-      <td class="auto-fill" style="width:15%">${session.birth_year || ""}</td>
+      <td class="auto-fill" style="width:15%">${birth.year}</td>
       <td style="width:10%">출생월</td>
-      <td class="auto-fill" style="width:10%">${session.birth_month ? session.birth_month + "월" : ""}</td>
+      <td class="auto-fill" style="width:10%">${birth.month}</td>
       <td style="width:10%">검사일</td>
       <td class="auto-fill">${session.exam_date || ""}</td>
     </tr>
@@ -3029,6 +3054,7 @@ function renderReportForm(session) {
     return score < cutoffs[1];
   }
 
+  const birth = calcBirth(session);
   let html = `<div class="report-sheet" id="print-report-sheet"><table>
     <tr><td colspan="10" class="title-row">
       영유아 건강검진 결과 통보서
@@ -3038,9 +3064,9 @@ function renderReportForm(session) {
       <td style="width:8%">성명</td>
       <td class="auto-fill" style="width:15%">${session.child_name||""}</td>
       <td style="width:10%">출생연도</td>
-      <td class="auto-fill" style="width:13%">${session.birth_year||""}</td>
+      <td class="auto-fill" style="width:13%">${birth.year}</td>
       <td style="width:8%">출생월</td>
-      <td class="auto-fill" colspan="5">${session.birth_month ? session.birth_month+"월" : ""}</td>
+      <td class="auto-fill" colspan="5">${birth.month}</td>
     </tr>
   </table>
 
