@@ -2188,6 +2188,10 @@ async function sbFetch(path, opts = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+function genSessionId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
 // Supabase에서 온 데이터는 answers/scores/extra_answers가 JSON string일 수 있음 → 파싱
 function normalizeSession(s) {
   if (!s) return s;
@@ -2220,6 +2224,12 @@ let state = {
 window.onload = () => {
   // 오늘 날짜 기본값
   document.getElementById("inp-date").value = new Date().toISOString().split("T")[0];
+
+  // 출생연도 기본값: 현재 년도 - 1, 출생월 기본값: 1월
+  const defaultYear = new Date().getFullYear() - 1;
+  document.getElementById("inp-year").value = defaultYear;
+  document.getElementById("inp-month").value = "1";
+  updateAge();
 
   // 연령 버튼 생성
   const grid = document.getElementById("age-grid");
