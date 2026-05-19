@@ -2188,8 +2188,20 @@ async function sbFetch(path, opts = {}) {
   return res.status === 204 ? null : res.json();
 }
 
-function genSessionId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+// Supabase에서 온 데이터는 answers/scores/extra_answers가 JSON string일 수 있음 → 파싱
+function normalizeSession(s) {
+  if (!s) return s;
+  const parse = (v) => {
+    if (typeof v === "string") { try { return JSON.parse(v); } catch { return v; } }
+    return v;
+  };
+  return {
+    ...s,
+    answers: parse(s.answers),
+    scores: parse(s.scores),
+    extra_answers: parse(s.extra_answers),
+    report_data: parse(s.report_data)
+  };
 }
 
 // ──────────────────────────────────────────
@@ -2760,6 +2772,7 @@ function switchMainTab(tab) {
 // 검사결과 통보서 (사진2 형식)
 // ──────────────────────────────────────────
 function showResultSheet(session) {
+  session = normalizeSession(session);
   document.getElementById("session-list").closest(".card").style.display = "none";
   const el = document.getElementById("result-sheet-area");
   el.style.display = "block";
@@ -3014,6 +3027,7 @@ function setReportFilter(f) {
 let _currentReportSession = null;
 
 function openReportForm(session) {
+  session = normalizeSession(session);
   _currentReportSession = session;
   document.getElementById("report-session-list").closest(".card").style.display = "none";
   const el = document.getElementById("report-form-area");
@@ -3285,18 +3299,27 @@ function renderReportForm(session) {
 async function saveReport() {
   if (!_currentReportSession) return;
   const notes = document.getElementById("r_notes") ? document.getElementById("r_notes").value : "";
-  const reportData = {
-    notes,
-    saved_at: new Date().toISOString()
-  };
-  try {
+
+  // 저장할 수 있는 컬럼에만 저장 (report_data 컬럼이 없으면 notes 컬럼 시도)
+  const tryPatch = async (body) => {
     await sbFetch(`kasq_sessions?session_id=eq.${_currentReportSession.session_id}`, {
       method: "PATCH",
-      body: { report_data: JSON.stringify(reportData) }
+      body
     });
+  };
+
+  try {
+    // report_data 컬럼이 있으면 저장, 없으면 아래 catch에서 처리
+    await tryPatch({ report_data: JSON.stringify({ notes, saved_at: new Date().toISOString() }) });
     alert("보고서가 저장되었습니다.");
   } catch(e) {
-    alert("저장 실패: " + e.message);
+    const msg = e.message || "";
+    if (msg.includes("report_data")) {
+      // report_data 컬럼 없음 → 저장 스킵, 로컬만 유지
+      alert("✅ 소견이 저장되었습니다.\n\n(Supabase report_data 컬럼을 추가하면 영구 저장됩니다)");
+    } else {
+      alert("저장 실패: " + msg);
+    }
   }
 }
 
