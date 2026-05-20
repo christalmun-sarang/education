@@ -467,6 +467,7 @@
       <div id="link-rows"></div>
       <div class="link-manager-footer">
         <button class="link-add-btn" onclick="addLinkRow()">+ 행 추가</button>
+        <span id="link-status" style="font-size:13px;color:var(--text-muted);"></span>
         <button class="link-save-btn" onclick="saveLinks()">💾 저장</button>
       </div>
     </div>
@@ -717,17 +718,31 @@
     initLinks();
   });
 
+  // ── Supabase 설정 ──
+  const SB_URL = "https://algfzvbqxxvcaunlsrxd.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsZ2Z6dmJxeHh2Y2F1bmxzcnhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MDM5MDQsImV4cCI6MjA5NDQ3OTkwNH0.lD9pIFoSw2lYY23zDMFbfeGvI0p_kcih61rScSh5a3s";
+
+  async function sbLinks(path, opts = {}) {
+    const res = await fetch(SB_URL + "/rest/v1/" + path, {
+      method: opts.method || "GET",
+      headers: {
+        "apikey": SB_KEY,
+        "Authorization": "Bearer " + SB_KEY,
+        "Content-Type": "application/json",
+        "Prefer": opts.prefer !== undefined ? opts.prefer : (opts.method === "POST" ? "return=representation" : "return=minimal")
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.statusText);
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
   // ── 링크 관리 ──
-  const LINK_KEY = 'sarang_links_v2';
-
-  function loadLinkData() {
-    try { return JSON.parse(localStorage.getItem(LINK_KEY)) || []; }
-    catch { return []; }
-  }
-
-  function saveLinkData(arr) {
-    localStorage.setItem(LINK_KEY, JSON.stringify(arr));
-  }
+  let _links = []; // { id, name, url, sort_order }
 
   function getFavicon(url) {
     try {
@@ -741,7 +756,6 @@
     const badge = document.getElementById('link-count-badge');
     const valid = links.filter(l => l.name && l.url);
     badge.textContent = valid.length + '개';
-
     if (!valid.length) {
       bar.innerHTML = '<span class="empty-links-msg">💡 아래에서 링크를 추가하면 여기에 바로가기가 생성됩니다</span>';
       return;
@@ -757,68 +771,99 @@
 
   function renderLinkRows(links) {
     const container = document.getElementById('link-rows');
-    // 빈 행 3개 확보
-    while (links.length < 3) links.push({ name: '', url: '' });
-    container.innerHTML = links.map((l, i) => `
-      <div class="link-row" id="link-row-${i}">
-        <input type="text" placeholder="이름 (예: 구글)" value="${l.name || ''}" id="link-name-${i}" oninput="previewLinks()">
-        <input type="url" placeholder="URL (https://...)" value="${l.url || ''}" id="link-url-${i}" oninput="previewLinks()">
-        <button class="link-del-btn" onclick="deleteLinkRow(${i})" title="삭제">×</button>
+    const rows = links.length ? links : [{name:'',url:''},{name:'',url:''},{name:'',url:''}];
+    container.innerHTML = rows.map((l, i) => `
+      <div class="link-row" data-id="${l.id || ''}">
+        <input type="text"  placeholder="이름 (예: 환자방문관리)" value="${(l.name||'').replace(/"/g,'&quot;')}">
+        <input type="url"   placeholder="URL (https://...)"       value="${(l.url ||'').replace(/"/g,'&quot;')}">
+        <button class="link-del-btn" onclick="this.parentNode.remove()" title="삭제">×</button>
       </div>
     `).join('');
   }
 
-  let _linkBuffer = [];
-
-  function initLinks() {
-    _linkBuffer = loadLinkData();
-    renderSavedBar(_linkBuffer);
-    renderLinkRows([..._linkBuffer]);
+  function setStatus(msg, color) {
+    const el = document.getElementById('link-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.color = color || 'var(--text-muted)';
   }
 
-  function previewLinks() {
-    // 실시간 미리보기는 저장 후에만
+  async function initLinks() {
+    setStatus('🔄 불러오는 중...');
+    try {
+      const rows = await sbLinks("links?select=*&order=sort_order.asc,id.asc");
+      _links = rows || [];
+      renderSavedBar(_links);
+      renderLinkRows(_links);
+      setStatus(_links.length ? '' : '저장된 링크가 없습니다');
+    } catch(e) {
+      setStatus('⚠️ 불러오기 실패: ' + e.message, '#dc2626');
+      // fallback: 빈 행 3개
+      renderLinkRows([]);
+    }
   }
 
   function addLinkRow() {
     const container = document.getElementById('link-rows');
-    const i = container.querySelectorAll('.link-row').length;
     const row = document.createElement('div');
     row.className = 'link-row';
-    row.id = `link-row-${i}`;
+    row.dataset.id = '';
     row.innerHTML = `
-      <input type="text" placeholder="이름 (예: 구글)" id="link-name-${i}" oninput="previewLinks()">
-      <input type="url" placeholder="URL (https://...)" id="link-url-${i}" oninput="previewLinks()">
+      <input type="text" placeholder="이름 (예: 환자방문관리)">
+      <input type="url"  placeholder="URL (https://...)">
       <button class="link-del-btn" onclick="this.parentNode.remove()" title="삭제">×</button>
     `;
     container.appendChild(row);
   }
 
-  function deleteLinkRow(i) {
-    const row = document.getElementById(`link-row-${i}`);
-    if (row) row.remove();
-  }
-
-  function saveLinks() {
-    const rows = document.getElementById('link-rows').querySelectorAll('.link-row');
-    const links = [];
-    rows.forEach(row => {
-      const nameEl = row.querySelector('input[type=text]');
-      const urlEl  = row.querySelector('input[type=url]');
-      const name = nameEl ? nameEl.value.trim() : '';
-      const url  = urlEl  ? urlEl.value.trim()  : '';
-      if (name || url) links.push({ name, url });
-    });
-    saveLinkData(links);
-    _linkBuffer = links;
-    renderSavedBar(links);
-    renderLinkRows([...links]);
-    // 저장 완료 피드백
+  async function saveLinks() {
     const btn = document.querySelector('.link-save-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✅ 저장됨';
-    btn.style.background = '#16a34a';
-    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    setStatus('🔄 저장 중...');
+
+    // 현재 행에서 데이터 수집
+    const rows = document.getElementById('link-rows').querySelectorAll('.link-row');
+    const newLinks = [];
+    rows.forEach((row, i) => {
+      const name = row.querySelector('input[type=text]').value.trim();
+      const url  = row.querySelector('input[type=url]').value.trim();
+      const id   = row.dataset.id || '';
+      if (name || url) newLinks.push({ id, name, url, sort_order: i });
+    });
+
+    try {
+      // 기존 전체 삭제 후 재삽입 (심플한 방식)
+      // 1. 기존 행 ID가 있는 것들 DELETE
+      const existingIds = _links.map(l => l.id).filter(Boolean);
+      if (existingIds.length) {
+        await sbLinks(`links?id=in.(${existingIds.join(',')})`, { method: 'DELETE', prefer: '' });
+      }
+      // 2. 새 데이터 INSERT
+      if (newLinks.length) {
+        const insertData = newLinks.map(({name, url, sort_order}) => ({name, url, sort_order}));
+        const inserted = await sbLinks('links', { method: 'POST', body: insertData });
+        _links = inserted || newLinks;
+      } else {
+        _links = [];
+      }
+
+      renderSavedBar(_links);
+      renderLinkRows(_links);
+      setStatus('✅ 저장 완료', '#16a34a');
+      btn.textContent = '✅ 저장됨';
+      btn.style.background = '#16a34a';
+      setTimeout(() => {
+        btn.textContent = '💾 저장';
+        btn.style.background = '';
+        btn.disabled = false;
+        setStatus('');
+      }, 1800);
+    } catch(e) {
+      setStatus('⚠️ 저장 실패: ' + e.message, '#dc2626');
+      btn.textContent = '💾 저장';
+      btn.disabled = false;
+    }
   }
 </script>
 </body>
