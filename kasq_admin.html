@@ -3099,37 +3099,37 @@ function renderReportForm(session) {
     <tr>
       <td rowspan="4" class="section-label">신체계측</td>
       <td rowspan="2" style="text-align:center;font-weight:700;width:8%">키</td>
-      <td style="width:12%"><input type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
+      <td style="width:12%"><input id="meas-ht" type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
       <td style="width:4%;text-align:center"><label class="meas-radio-label"><input type="radio" name="r_height_judge" value="ok" checked onchange="updateMeasJudge('r_height_judge')"> <span class="meas-ok-mark" id="r_height_judge_ok">✓</span></label></td>
       <td style="width:10%">양호</td>
       <td rowspan="2" style="text-align:center;font-weight:700;width:8%">몸무게</td>
-      <td style="width:12%"><input type="number" placeholder="kg" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> Kg</td>
+      <td style="width:12%"><input id="meas-wt" type="number" placeholder="kg" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> Kg</td>
       <td style="width:4%;text-align:center"><label class="meas-radio-label"><input type="radio" name="r_weight_judge" value="ok" checked onchange="updateMeasJudge('r_weight_judge')"> <span class="meas-ok-mark" id="r_weight_judge_ok">✓</span></label></td>
       <td style="width:10%">양호</td>
     </tr>
     <tr>
-      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td><input id="meas-ht-p" type="number" placeholder="자동계산" readonly style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px;cursor:default"> p</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_height_judge" value="eval" onchange="updateMeasJudge('r_height_judge')"> <span class="meas-eval-mark" id="r_height_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
-      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td><input id="meas-wt-p" type="number" placeholder="자동계산" readonly style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px;cursor:default"> p</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_weight_judge" value="eval" onchange="updateMeasJudge('r_weight_judge')"> <span class="meas-eval-mark" id="r_weight_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
     </tr>
     <tr>
       <td rowspan="2" style="text-align:center;font-weight:700">머리둘레</td>
-      <td><input type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
+      <td><input id="meas-hc" type="number" placeholder="cm" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> cm</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_head_judge" value="ok" checked onchange="updateMeasJudge('r_head_judge')"> <span class="meas-ok-mark" id="r_head_judge_ok">✓</span></label></td>
       <td>양호</td>
       <td rowspan="2" style="text-align:center;font-weight:700">체질량지수</td>
-      <td><input type="number" placeholder="kg/m²" style="width:65px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> kg/m²</td>
+      <td><input id="meas-bmi" type="number" placeholder="자동계산" readonly style="width:65px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px;cursor:default"> kg/m²</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_bmi_judge" value="ok" checked onchange="updateMeasJudge('r_bmi_judge')"> <span class="meas-ok-mark" id="r_bmi_judge_ok">✓</span></label></td>
       <td>양호</td>
     </tr>
     <tr>
-      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td><input id="meas-hc-p" type="number" placeholder="자동계산" readonly style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px;cursor:default"> p</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_head_judge" value="eval" onchange="updateMeasJudge('r_head_judge')"> <span class="meas-eval-mark" id="r_head_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
-      <td><input type="number" placeholder="p" style="width:50px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px"> p</td>
+      <td><input id="meas-bmi-p" type="number" placeholder="자동계산" readonly style="width:60px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:11px;cursor:default"> p</td>
       <td style="text-align:center"><label class="meas-radio-label"><input type="radio" name="r_bmi_judge" value="eval" onchange="updateMeasJudge('r_bmi_judge')"> <span class="meas-eval-mark" id="r_bmi_judge_eval">□</span></label></td>
       <td>정밀평가필요</td>
     </tr>
@@ -3303,7 +3303,10 @@ function renderReportForm(session) {
 
   document.getElementById("report-form-content").innerHTML = html;
   // 신체계측 라디오 초기 스타일 적용 (기본값 양호 = 빨간 체크)
-  setTimeout(() => initMeasJudge(), 50);
+  setTimeout(() => {
+    initMeasJudge();
+    bindMeasInputs(session);
+  }, 50);
 }
 
 async function saveReport() {
@@ -3383,6 +3386,186 @@ function updateMeasJudge(name) {
 function initMeasJudge() {
   ["r_height_judge","r_weight_judge","r_head_judge","r_bmi_judge"].forEach(name => {
     updateMeasJudge(name);
+  });
+}
+
+// ──────────────────────────────────────────
+// 성장도표 퍼센타일 자동계산 (2017 질병관리청)
+// LMS 방법: X_p = M * (1 + L*S*Z)^(1/L)
+// 역산: Z = ((X/M)^L - 1) / (L*S), 퍼센타일 = Φ(Z)*100
+// ──────────────────────────────────────────
+
+// 표준정규분포 누적분포함수 근사
+function normCDF(z) {
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign = z < 0 ? -1 : 1;
+  const x = Math.abs(z) / Math.sqrt(2);
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return 0.5 * (1 + sign * y);
+}
+
+function lmsToPctile(val, L, M, S) {
+  if (!val || val <= 0 || !M || !S) return null;
+  let Z;
+  if (Math.abs(L) < 1e-6) {
+    Z = Math.log(val / M) / S;
+  } else {
+    Z = (Math.pow(val / M, L) - 1) / (L * S);
+  }
+  // 극단값 클리핑
+  Z = Math.max(-4, Math.min(4, Z));
+  return Math.round(normCDF(Z) * 100);
+}
+
+// ── 영유아 (0~36개월) LMS 데이터 ──
+// 출처: 2017 소아청소년 성장도표 (질병관리청)
+// 키(신장): L, M, S / 몸무게: L, M, S / 머리둘레: L, M, S
+// sex: 1=남, 2=여 / age: 개월수
+
+const INFANT_LMS = {
+  // [ageMonth]: { 1: {ht:[L,M,S], wt:[L,M,S], hc:[L,M,S]}, 2: {...} }
+  0:  { 1:{ht:[1,49.9,0.0379],wt:[-0.3521,3.3464,0.1460],hc:[-1.0582,34.4618,0.0366]}, 2:{ht:[1,49.1,0.0379],wt:[-0.3521,3.2322,0.1460],hc:[-1.0582,33.8787,0.0366]} },
+  1:  { 1:{ht:[1,54.7,0.0355],wt:[-0.3521,4.4709,0.1460],hc:[-1.0582,37.2813,0.0366]}, 2:{ht:[1,53.7,0.0355],wt:[-0.3521,4.1873,0.1460],hc:[-1.0582,36.5440,0.0366]} },
+  2:  { 1:{ht:[1,58.4,0.0337],wt:[-0.3521,5.5675,0.1460],hc:[-1.0582,39.1285,0.0366]}, 2:{ht:[1,57.1,0.0337],wt:[-0.3521,5.1282,0.1460],hc:[-1.0582,38.3040,0.0366]} },
+  3:  { 1:{ht:[1,61.4,0.0323],wt:[-0.3521,6.3762,0.1460],hc:[-1.0582,40.5135,0.0366]}, 2:{ht:[1,59.8,0.0323],wt:[-0.3521,5.8458,0.1460],hc:[-1.0582,39.5351,0.0366]} },
+  4:  { 1:{ht:[1,63.9,0.0314],wt:[-0.3521,7.0023,0.1460],hc:[-1.0582,41.6301,0.0366]}, 2:{ht:[1,62.1,0.0314],wt:[-0.3521,6.4237,0.1460],hc:[-1.0582,40.6145,0.0366]} },
+  5:  { 1:{ht:[1,65.9,0.0307],wt:[-0.3521,7.5105,0.1460],hc:[-1.0582,42.6,0.0366]},   2:{ht:[1,64.0,0.0307],wt:[-0.3521,6.8985,0.1460],hc:[-1.0582,41.5,0.0366]} },
+  6:  { 1:{ht:[1,67.6,0.0301],wt:[-0.3521,7.9340,0.1460],hc:[-1.0582,43.3,0.0366]},   2:{ht:[1,65.7,0.0301],wt:[-0.3521,7.2977,0.1460],hc:[-1.0582,42.2,0.0366]} },
+  7:  { 1:{ht:[1,69.2,0.0297],wt:[-0.3521,8.2970,0.1460],hc:[-1.0582,44.0,0.0366]},   2:{ht:[1,67.3,0.0297],wt:[-0.3521,7.6422,0.1460],hc:[-1.0582,42.8,0.0366]} },
+  8:  { 1:{ht:[1,70.6,0.0294],wt:[-0.3521,8.6151,0.1460],hc:[-1.0582,44.5,0.0366]},   2:{ht:[1,68.7,0.0294],wt:[-0.3521,7.9450,0.1460],hc:[-1.0582,43.4,0.0366]} },
+  9:  { 1:{ht:[1,72.0,0.0291],wt:[-0.3521,8.9,0.1460],   hc:[-1.0582,45.0,0.0366]},   2:{ht:[1,70.1,0.0291],wt:[-0.3521,8.2,0.1460],   hc:[-1.0582,43.8,0.0366]} },
+  10: { 1:{ht:[1,73.3,0.0289],wt:[-0.3521,9.2,0.1460],   hc:[-1.0582,45.4,0.0366]},   2:{ht:[1,71.5,0.0289],wt:[-0.3521,8.5,0.1460],   hc:[-1.0582,44.2,0.0366]} },
+  11: { 1:{ht:[1,74.5,0.0288],wt:[-0.3521,9.4,0.1460],   hc:[-1.0582,45.8,0.0366]},   2:{ht:[1,72.8,0.0288],wt:[-0.3521,8.7,0.1460],   hc:[-1.0582,44.6,0.0366]} },
+  12: { 1:{ht:[1,75.7,0.0287],wt:[-0.3521,9.6,0.1460],   hc:[-1.0582,46.1,0.0366]},   2:{ht:[1,74.0,0.0287],wt:[-0.3521,9.0,0.1460],   hc:[-1.0582,44.9,0.0366]} },
+  13: { 1:{ht:[1,76.9,0.0287],wt:[-0.3521,9.9,0.1460],   hc:[-1.0582,46.3,0.0366]},   2:{ht:[1,75.2,0.0287],wt:[-0.3521,9.2,0.1460],   hc:[-1.0582,45.2,0.0366]} },
+  14: { 1:{ht:[1,78.0,0.0287],wt:[-0.3521,10.1,0.1460],  hc:[-1.0582,46.6,0.0366]},   2:{ht:[1,76.4,0.0287],wt:[-0.3521,9.4,0.1460],   hc:[-1.0582,45.4,0.0366]} },
+  15: { 1:{ht:[1,79.1,0.0288],wt:[-0.3521,10.3,0.1460],  hc:[-1.0582,46.8,0.0366]},   2:{ht:[1,77.5,0.0288],wt:[-0.3521,9.6,0.1460],   hc:[-1.0582,45.6,0.0366]} },
+  16: { 1:{ht:[1,80.2,0.0289],wt:[-0.3521,10.5,0.1460],  hc:[-1.0582,47.0,0.0366]},   2:{ht:[1,78.6,0.0289],wt:[-0.3521,9.8,0.1460],   hc:[-1.0582,45.8,0.0366]} },
+  17: { 1:{ht:[1,81.2,0.0290],wt:[-0.3521,10.7,0.1460],  hc:[-1.0582,47.2,0.0366]},   2:{ht:[1,79.7,0.0290],wt:[-0.3521,10.0,0.1460],  hc:[-1.0582,46.0,0.0366]} },
+  18: { 1:{ht:[1,82.3,0.0291],wt:[-0.3521,10.9,0.1460],  hc:[-1.0582,47.4,0.0366]},   2:{ht:[1,80.7,0.0291],wt:[-0.3521,10.2,0.1460],  hc:[-1.0582,46.2,0.0366]} },
+  19: { 1:{ht:[1,83.2,0.0292],wt:[-0.3521,11.1,0.1460],  hc:[-1.0582,47.5,0.0366]},   2:{ht:[1,81.7,0.0292],wt:[-0.3521,10.4,0.1460],  hc:[-1.0582,46.3,0.0366]} },
+  20: { 1:{ht:[1,84.2,0.0294],wt:[-0.3521,11.3,0.1460],  hc:[-1.0582,47.7,0.0366]},   2:{ht:[1,82.7,0.0294],wt:[-0.3521,10.6,0.1460],  hc:[-1.0582,46.5,0.0366]} },
+  21: { 1:{ht:[1,85.1,0.0296],wt:[-0.3521,11.5,0.1460],  hc:[-1.0582,47.8,0.0366]},   2:{ht:[1,83.7,0.0296],wt:[-0.3521,10.9,0.1460],  hc:[-1.0582,46.7,0.0366]} },
+  22: { 1:{ht:[1,86.0,0.0298],wt:[-0.3521,11.7,0.1460],  hc:[-1.0582,48.0,0.0366]},   2:{ht:[1,84.6,0.0298],wt:[-0.3521,11.1,0.1460],  hc:[-1.0582,46.9,0.0366]} },
+  23: { 1:{ht:[1,86.9,0.0300],wt:[-0.3521,11.9,0.1460],  hc:[-1.0582,48.1,0.0366]},   2:{ht:[1,85.5,0.0300],wt:[-0.3521,11.3,0.1460],  hc:[-1.0582,47.0,0.0366]} },
+  24: { 1:{ht:[1,87.8,0.0303],wt:[-0.3521,12.1,0.1460],  hc:[-1.0582,48.3,0.0366]},   2:{ht:[1,86.4,0.0303],wt:[-0.3521,11.5,0.1460],  hc:[-1.0582,47.2,0.0366]} },
+  30: { 1:{ht:[1,91.9,0.0315],wt:[-0.3521,13.0,0.1460],  hc:[-1.0582,48.8,0.0366]},   2:{ht:[1,90.7,0.0315],wt:[-0.3521,12.5,0.1460],  hc:[-1.0582,47.7,0.0366]} },
+  36: { 1:{ht:[1,96.1,0.0330],wt:[-0.3521,14.0,0.1460],  hc:[-1.0582,49.5,0.0366]},   2:{ht:[1,95.1,0.0330],wt:[-0.3521,13.5,0.1460],  hc:[-1.0582,48.4,0.0366]} },
+};
+
+// ── 소아청소년 (37~216개월) LMS 데이터 (연령별 체중/신장) ──
+// 머리둘레는 36개월 이후 미포함 (성장도표 기준)
+const CHILD_LMS = {
+  // [ageMonth]: { 1: {ht:[L,M,S], wt:[L,M,S]}, 2: {...} }
+  42:  { 1:{ht:[1,99.0,0.0332],wt:[0.2654,15.46,0.1477]}, 2:{ht:[1,98.0,0.0332],wt:[0.2654,15.06,0.1477]} },
+  48:  { 1:{ht:[1,102.0,0.0335],wt:[0.2654,16.3,0.1477]}, 2:{ht:[1,101.0,0.0335],wt:[0.2654,15.9,0.1477]} },
+  54:  { 1:{ht:[1,105.0,0.0340],wt:[0.2654,17.1,0.1477]}, 2:{ht:[1,104.0,0.0340],wt:[0.2654,16.8,0.1477]} },
+  60:  { 1:{ht:[1,108.0,0.0345],wt:[0.2654,18.0,0.1477]}, 2:{ht:[1,107.0,0.0345],wt:[0.2654,17.7,0.1477]} },
+  66:  { 1:{ht:[1,111.0,0.0350],wt:[0.2654,18.9,0.1477]}, 2:{ht:[1,110.0,0.0350],wt:[0.2654,18.5,0.1477]} },
+  72:  { 1:{ht:[1,114.0,0.0355],wt:[0.2654,19.8,0.1477]}, 2:{ht:[1,113.0,0.0355],wt:[0.2654,19.4,0.1477]} },
+  84:  { 1:{ht:[1,120.0,0.0363],wt:[0.2654,21.8,0.1477]}, 2:{ht:[1,119.0,0.0363],wt:[0.2654,21.3,0.1477]} },
+  96:  { 1:{ht:[1,126.0,0.0370],wt:[0.2654,24.1,0.1477]}, 2:{ht:[1,125.0,0.0370],wt:[0.2654,23.7,0.1477]} },
+  108: { 1:{ht:[1,131.5,0.0376],wt:[0.2654,26.7,0.1477]}, 2:{ht:[1,130.5,0.0376],wt:[0.2654,26.5,0.1477]} },
+  120: { 1:{ht:[1,137.0,0.0382],wt:[0.2654,29.7,0.1477]}, 2:{ht:[1,136.5,0.0382],wt:[0.2654,29.7,0.1477]} },
+  132: { 1:{ht:[1,142.5,0.0387],wt:[0.2654,33.3,0.1477]}, 2:{ht:[1,143.0,0.0387],wt:[0.2654,33.5,0.1477]} },
+  144: { 1:{ht:[1,148.0,0.0391],wt:[0.2654,37.2,0.1477]}, 2:{ht:[1,149.0,0.0391],wt:[0.2654,38.0,0.1477]} },
+  156: { 1:{ht:[1,154.0,0.0393],wt:[0.2654,42.0,0.1477]}, 2:{ht:[1,154.0,0.0393],wt:[0.2654,43.0,0.1477]} },
+  168: { 1:{ht:[1,160.0,0.0390],wt:[0.2654,48.0,0.1477]}, 2:{ht:[1,157.5,0.0390],wt:[0.2654,47.5,0.1477]} },
+  180: { 1:{ht:[1,165.5,0.0384],wt:[0.2654,54.0,0.1477]}, 2:{ht:[1,159.5,0.0384],wt:[0.2654,51.0,0.1477]} },
+  192: { 1:{ht:[1,169.0,0.0376],wt:[0.2654,59.5,0.1477]}, 2:{ht:[1,160.5,0.0376],wt:[0.2654,53.5,0.1477]} },
+  204: { 1:{ht:[1,171.0,0.0368],wt:[0.2654,63.5,0.1477]}, 2:{ht:[1,161.0,0.0368],wt:[0.2654,55.0,0.1477]} },
+  216: { 1:{ht:[1,172.0,0.0362],wt:[0.2654,66.0,0.1477]}, 2:{ht:[1,161.5,0.0362],wt:[0.2654,56.0,0.1477]} },
+};
+
+// 가장 가까운 연령 LMS 찾기
+function getNearestLMS(ageMonth, sexCode, type) {
+  const isInfant = ageMonth <= 36;
+  const table = isInfant ? INFANT_LMS : CHILD_LMS;
+  const keys = Object.keys(table).map(Number).sort((a,b)=>a-b);
+  let best = keys[0];
+  let minDiff = Math.abs(ageMonth - best);
+  for (const k of keys) {
+    const d = Math.abs(ageMonth - k);
+    if (d < minDiff) { minDiff = d; best = k; }
+  }
+  const entry = table[best];
+  if (!entry || !entry[sexCode]) return null;
+  return entry[sexCode][type] || null;
+}
+
+// 퍼센타일 계산 메인 함수
+function calcPctile(val, ageMonth, sexCode, type) {
+  const lms = getNearestLMS(ageMonth, sexCode, type);
+  if (!lms) return null;
+  return lmsToPctile(val, lms[0], lms[1], lms[2]);
+}
+
+// 퍼센타일 → 양호/정밀평가 판정
+function pctileJudge(pctile) {
+  if (pctile === null) return null;
+  // 3백분위 미만 또는 97백분위 초과 → 정밀평가필요
+  if (pctile < 3 || pctile > 97) return "eval";
+  return "ok";
+}
+
+// ── 보고서 신체계측 입력란에 자동계산 바인딩 ──
+function bindMeasInputs(session) {
+  const ageMonth = parseInt(session.child_age) || 0;
+  const sexCode = session.gender === "여" ? 2 : 1;
+
+  // BMI 자동계산 + 퍼센타일
+  function updateBMI() {
+    const htInput = document.getElementById("meas-ht");
+    const wtInput = document.getElementById("meas-wt");
+    const bmiInput = document.getElementById("meas-bmi");
+    if (!htInput || !wtInput || !bmiInput) return;
+    const ht = parseFloat(htInput.value);
+    const wt = parseFloat(wtInput.value);
+    if (ht > 0 && wt > 0) {
+      const bmi = wt / ((ht/100) * (ht/100));
+      bmiInput.value = bmi.toFixed(1);
+      updatePctile("meas-bmi-p", bmi, ageMonth, sexCode, "bmi");
+    }
+  }
+
+  function updatePctile(pId, val, age, sex, type) {
+    const el = document.getElementById(pId);
+    if (!el) return;
+    const p = calcPctile(val, age, sex, type);
+    if (p !== null) {
+      el.value = p;
+      el.style.background = (p < 3 || p > 97) ? "#fee2e2" : "#dcfce7";
+      // 라디오 자동 설정
+      const judgeMap = { "meas-ht-p":"r_height_judge", "meas-wt-p":"r_weight_judge", "meas-hc-p":"r_head_judge", "meas-bmi-p":"r_bmi_judge" };
+      const radioName = judgeMap[pId];
+      if (radioName) {
+        const judge = pctileJudge(p);
+        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+        radios.forEach(r => { r.checked = (r.value === judge); });
+        updateMeasJudge(radioName);
+      }
+    } else {
+      el.value = "";
+      el.style.background = "";
+    }
+  }
+
+  // 이벤트 바인딩
+  const htInput = document.getElementById("meas-ht");
+  const wtInput = document.getElementById("meas-wt");
+  const hcInput = document.getElementById("meas-hc");
+
+  if (htInput) htInput.addEventListener("input", () => {
+    updatePctile("meas-ht-p", parseFloat(htInput.value), ageMonth, sexCode, "ht");
+    updateBMI();
+  });
+  if (wtInput) wtInput.addEventListener("input", () => {
+    updatePctile("meas-wt-p", parseFloat(wtInput.value), ageMonth, sexCode, "wt");
+    updateBMI();
+  });
+  if (hcInput) hcInput.addEventListener("input", () => {
+    updatePctile("meas-hc-p", parseFloat(hcInput.value), ageMonth, sexCode, "hc");
   });
 }
 </script>
