@@ -848,7 +848,10 @@
       <div id="subtab-meas" style="display:block;">
         <div class="card">
           <div class="card-title">📏 신체계측 입력</div>
-          <div id="meas-patient-info" style="background:var(--primary-light);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:700;color:var(--primary-dark);"></div>
+          <div id="meas-patient-info" style="background:var(--primary-light);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:700;color:var(--primary-dark);display:flex;justify-content:space-between;align-items:center;">
+            <span id="meas-patient-info-text"></span>
+            <button onclick="resetMeasTab()" style="background:white;border:1.5px solid #99f6e4;border-radius:8px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--primary-dark);cursor:pointer;">🔄 초기화</button>
+          </div>
 
           <!-- 미입력 알림 -->
           <div id="meas-missing-notice" style="display:none;background:#fef3c7;border:1px solid #fbbf24;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92400e;">
@@ -3192,7 +3195,7 @@ function initMeasTab(session) {
   const sexCode  = session.gender === "여" ? 2 : 1;
   const sexLabel = session.gender === "여" ? "여아" : "남아";
 
-  document.getElementById("meas-patient-info").innerHTML =
+  document.getElementById("meas-patient-info-text").innerHTML =
     `👶 <strong>${session.child_name || "—"}</strong> &nbsp;|&nbsp; ${sexLabel} &nbsp;|&nbsp; ${ageMonth}개월`;
 
   // 저장값 복원
@@ -3309,7 +3312,25 @@ function updateMeasSummary(ageMonth) {
   }).join("");
 }
 
-// 보고서 탭에 신체계측 데이터 반영
+function resetMeasTab() {
+  if (!confirm("신체계측 입력값을 모두 초기화하시겠습니까?")) return;
+  _measData = {};
+  // 입력란 초기화
+  ["m-ht","m-wt","m-hc"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  // 박스 초기화
+  ["m-ht-p-box","m-wt-p-box","m-hc-p-box","m-bmi-p-box"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent="—"; el.style.background="white"; el.style.color="var(--slate-400)"; el.style.borderColor="var(--slate-200)"; }
+  });
+  const bmiVal = document.getElementById("m-bmi-val");
+  if (bmiVal) { bmiVal.textContent="—"; bmiVal.style.color="var(--slate-400)"; }
+  const summary = document.getElementById("meas-summary");
+  if (summary) summary.style.display="none";
+  updateMissingNotice();
+}
 function applyMeasToReport() {
   // 보고서 탭으로 전환
   switchReportSubtab('report');
@@ -3796,7 +3817,57 @@ const CHILD_LMS = {
 };
 
 // 가장 가까운 연령 LMS 찾기
+// BMI LMS 데이터 (2017 소아청소년 성장도표, 0~71개월)
+// [L, M, S] 형식
+const BMI_LMS = {
+  0:  { 1:[-0.2654,13.34,0.1342], 2:[-0.2654,13.09,0.1342] },
+  1:  { 1:[-0.2654,14.96,0.1342], 2:[-0.2654,14.48,0.1342] },
+  2:  { 1:[-0.2654,16.28,0.1342], 2:[-0.2654,15.71,0.1342] },
+  3:  { 1:[-0.2654,16.90,0.1342], 2:[-0.2654,16.27,0.1342] },
+  4:  { 1:[-0.2654,17.13,0.1342], 2:[-0.2654,16.46,0.1342] },
+  5:  { 1:[-0.2654,17.14,0.1342], 2:[-0.2654,16.42,0.1342] },
+  6:  { 1:[-0.2654,17.02,0.1342], 2:[-0.2654,16.25,0.1342] },
+  7:  { 1:[-0.2654,16.82,0.1342], 2:[-0.2654,16.01,0.1342] },
+  8:  { 1:[-0.2654,16.59,0.1342], 2:[-0.2654,15.76,0.1342] },
+  9:  { 1:[-0.2654,16.36,0.1342], 2:[-0.2654,15.51,0.1342] },
+  10: { 1:[-0.2654,16.13,0.1342], 2:[-0.2654,15.28,0.1342] },
+  11: { 1:[-0.2654,15.94,0.1342], 2:[-0.2654,15.09,0.1342] },
+  12: { 1:[-0.2654,15.77,0.1342], 2:[-0.2654,14.93,0.1342] },
+  13: { 1:[-0.2654,15.64,0.1342], 2:[-0.2654,14.81,0.1342] },
+  14: { 1:[-0.2654,15.52,0.1342], 2:[-0.2654,14.70,0.1342] },
+  15: { 1:[-0.2654,15.43,0.1342], 2:[-0.2654,14.62,0.1342] },
+  16: { 1:[-0.2654,15.34,0.1342], 2:[-0.2654,14.56,0.1342] },
+  17: { 1:[-0.2654,15.27,0.1342], 2:[-0.2654,14.50,0.1342] },
+  18: { 1:[-0.2654,15.21,0.1342], 2:[-0.2654,14.46,0.1342] },
+  19: { 1:[-0.2654,15.16,0.1342], 2:[-0.2654,14.43,0.1342] },
+  20: { 1:[-0.2654,15.12,0.1342], 2:[-0.2654,14.40,0.1342] },
+  21: { 1:[-0.2654,15.08,0.1342], 2:[-0.2654,14.38,0.1342] },
+  22: { 1:[-0.2654,15.04,0.1342], 2:[-0.2654,14.36,0.1342] },
+  23: { 1:[-0.2654,15.01,0.1342], 2:[-0.2654,14.35,0.1342] },
+  24: { 1:[-0.2654,14.99,0.1342], 2:[-0.2654,14.34,0.1342] },
+  30: { 1:[-0.2654,14.90,0.1342], 2:[-0.2654,14.32,0.1342] },
+  36: { 1:[-0.2654,14.84,0.1342], 2:[-0.2654,14.32,0.1342] },
+  42: { 1:[-0.2654,14.81,0.1342], 2:[-0.2654,14.35,0.1342] },
+  48: { 1:[-0.2654,14.80,0.1342], 2:[-0.2654,14.39,0.1342] },
+  54: { 1:[-0.2654,14.83,0.1342], 2:[-0.2654,14.46,0.1342] },
+  60: { 1:[-0.2654,14.88,0.1342], 2:[-0.2654,14.56,0.1342] },
+  66: { 1:[-0.2654,14.97,0.1342], 2:[-0.2654,14.71,0.1342] },
+  72: { 1:[-0.2654,15.09,0.1342], 2:[-0.2654,14.90,0.1342] },
+};
+
 function getNearestLMS(ageMonth, sexCode, type) {
+  // BMI는 별도 테이블 사용
+  if (type === "bmi") {
+    const keys = Object.keys(BMI_LMS).map(Number).sort((a,b)=>a-b);
+    let best = keys[0];
+    let minDiff = Math.abs(ageMonth - best);
+    for (const k of keys) {
+      const d = Math.abs(ageMonth - k);
+      if (d < minDiff) { minDiff = d; best = k; }
+    }
+    const entry = BMI_LMS[best];
+    return (entry && entry[sexCode]) ? entry[sexCode] : null;
+  }
   const isInfant = ageMonth <= 36;
   const table = isInfant ? INFANT_LMS : CHILD_LMS;
   const keys = Object.keys(table).map(Number).sort((a,b)=>a-b);
