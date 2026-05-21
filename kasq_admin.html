@@ -857,7 +857,7 @@
       </div>
     </div>
 
-    <!-- 보고서 편집 화면 (서브탭) -->
+    <!-- 보고서 편집 화면 -->
     <div id="report-form-area" style="display:none;">
       <!-- 상단 버튼 -->
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
@@ -866,20 +866,8 @@
         <button class="btn-primary" id="report-print-btn" onclick="printReport()" style="background:var(--green);display:none;">🖨 인쇄 / PDF</button>
       </div>
 
-      <!-- 서브탭 -->
-      <div style="display:flex;gap:6px;margin-bottom:16px;background:white;border-radius:12px;padding:6px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
-        <button id="subtab-meas-btn" onclick="switchReportSubtab('meas')"
-          style="flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--primary);color:white;box-shadow:0 2px 6px rgba(13,148,136,0.3);">
-          📏 신체계측
-        </button>
-        <button id="subtab-report-btn" onclick="switchReportSubtab('report')"
-          style="flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:var(--slate-500);">
-          📋 보고서
-        </button>
-      </div>
-
-      <!-- 신체계측 서브탭 -->
-      <div id="subtab-meas" style="display:block;">
+      <!-- 신체계측 서브탭 (숨김 - 백그라운드 초기화용) -->
+      <div id="subtab-meas" style="display:none;">
         <div class="card">
           <div class="card-title">📏 신체계측 입력</div>
           <div id="meas-patient-info" style="background:var(--primary-light);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:700;color:var(--primary-dark);display:flex;justify-content:space-between;align-items:center;">
@@ -3290,16 +3278,33 @@ async function loadReportList() {
     const rows = await sbFetch("kasq_sessions?select=*&order=created_at.desc&limit=50");
     const filtered = reportFilter === "all" ? (rows || []) : (rows || []).filter(s => s.status === "completed");
     if (!filtered.length) { el.innerHTML = '<div class="empty-state">검사 결과가 없습니다</div>'; return; }
-    el.innerHTML = filtered.map(s => `
-      <div class="session-item" onclick='openReportForm(${JSON.stringify(s)})'>
+    el.innerHTML = filtered.map(s => {
+      const rd = s.report_data
+        ? (typeof s.report_data === "string" ? JSON.parse(s.report_data) : s.report_data)
+        : null;
+      const hasReport = rd && rd.saved_at;
+      const hasMeas   = rd && rd.meas && (rd.meas.ht || rd.meas.wt);
+      const statusBadge = hasReport
+        ? `<span style="background:#dcfce7;color:#16a34a;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">✅ 작성완료</span>`
+        : `<span style="background:#fef9c3;color:#92400e;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">⬜ 미작성</span>`;
+      const measBadge = hasMeas
+        ? `<span style="background:#e0f2fe;color:#0369a1;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">📏 신체계측완료</span>`
+        : `<span style="background:#f1f5f9;color:#94a3b8;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">📏 신체계측없음</span>`;
+      const btnLabel = hasReport ? "📂 불러오기" : "✏️ 작성하기";
+      return `
+      <div class="session-item" style="cursor:default;gap:10px;flex-wrap:wrap;">
         <div class="session-avatar ${s.gender === "여" ? "avatar-f" : "avatar-m"}">${s.gender === "여" ? "👧" : "👦"}</div>
-        <div class="session-info">
+        <div class="session-info" style="flex:1;min-width:120px;">
           <div class="session-name">${s.child_name}</div>
           <div class="session-meta">${s.child_age} · ${s.examiner || ""} · ${s.exam_date || ""}</div>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">${statusBadge}${measBadge}</div>
         </div>
-        <span class="badge badge-done">보고서 작성 →</span>
-      </div>
-    `).join("");
+        <button onclick='openReportForm(${JSON.stringify(s)})'
+          style="background:var(--primary);color:white;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">
+          ${btnLabel}
+        </button>
+      </div>`;
+    }).join("");
   } catch(e) {
     el.innerHTML = `<div class="empty-state">⚠️ 불러오기 실패: ${e.message}</div>`;
   }
@@ -3325,16 +3330,7 @@ function switchReportSubtab(tab) {
   const isMeas = tab === 'meas';
   document.getElementById('subtab-meas').style.display = isMeas ? 'block' : 'none';
   document.getElementById('subtab-report').style.display = isMeas ? 'none' : 'block';
-  // 버튼 스타일
-  const measBtn = document.getElementById('subtab-meas-btn');
-  const repBtn  = document.getElementById('subtab-report-btn');
-  measBtn.style.background = isMeas ? 'var(--primary)' : 'transparent';
-  measBtn.style.color      = isMeas ? 'white' : 'var(--slate-500)';
-  measBtn.style.boxShadow  = isMeas ? '0 2px 6px rgba(13,148,136,0.3)' : 'none';
-  repBtn.style.background  = !isMeas ? 'var(--primary)' : 'transparent';
-  repBtn.style.color       = !isMeas ? 'white' : 'var(--slate-500)';
-  repBtn.style.boxShadow   = !isMeas ? '0 2px 6px rgba(13,148,136,0.3)' : 'none';
-  // 보고서 탭엔 인쇄버튼 보여주기
+  // 인쇄버튼: 보고서 탭에서만 표시
   document.getElementById('report-print-btn').style.display = isMeas ? 'none' : 'inline-flex';
 }
 
@@ -3352,12 +3348,12 @@ function openReportForm(session) {
     : {};
   _measData = saved.meas || {};
 
-  // 신체계측 탭 초기화
+  // 신체계측 데이터 초기화 (백그라운드 - 보고서 자동채우기용)
   initMeasTab(session);
   // 보고서 탭 렌더링
   renderReportForm(session);
-  // 신체계측 탭부터 시작
-  switchReportSubtab('meas');
+  // 바로 보고서 탭으로 이동
+  switchReportSubtab('report');
 }
 
 function closeReportForm() {
@@ -3566,7 +3562,6 @@ async function saveReport() {
     await sbFetch(`kasq_sessions?session_id=eq.${_currentReportSession.session_id}`, {
       method: "PATCH", body: payload
     });
-    // 세션 캐시 업데이트
     _currentReportSession.report_data = payload.report_data;
     btn.textContent = "✅ 저장됨";
     setTimeout(() => { btn.textContent = "💾 저장"; btn.disabled = false; }, 1500);
