@@ -694,6 +694,7 @@
   <div class="main-tabs">
     <button class="main-tab-btn active" id="tab-exam-btn" onclick="switchMainTab('exam')">📋 검사 등록</button>
     <button class="main-tab-btn" id="tab-results-btn" onclick="switchMainTab('results')">📊 검사결과</button>
+    <button class="main-tab-btn" id="tab-meas-btn" onclick="switchMainTab('meas')">📏 신체계측 자료입력</button>
     <button class="main-tab-btn" id="tab-report-btn" onclick="switchMainTab('report')">📝 보고서작성</button>
   </div>
 
@@ -802,6 +803,39 @@
         <button class="btn-primary" onclick="printResultSheet()">🖨 인쇄 / PDF</button>
       </div>
       <div id="result-sheet-content"></div>
+    </div>
+  </div>
+
+  <!-- 신체계측 자료입력 패널 (인라인 테이블) -->
+  <div id="panel-meas" style="display:none;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div class="card-title" style="margin-bottom:0;">📏 신체계측 자료입력</div>
+        <button class="btn-secondary" onclick="loadMeasTable()" style="padding:8px 14px;font-size:13px;">🔄 새로고침</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="meas-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--primary);color:white;">
+              <th style="padding:10px 12px;text-align:left;border-radius:8px 0 0 0;white-space:nowrap;">이름</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">성별</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">월령</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">키 (cm)</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">키 %ile</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">몸무게 (kg)</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">몸무게 %ile</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">머리둘레 (cm)</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">머리둘레 %ile</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">BMI</th>
+              <th style="padding:10px 8px;text-align:center;white-space:nowrap;">BMI %ile</th>
+              <th style="padding:10px 8px;text-align:center;border-radius:0 8px 0 0;white-space:nowrap;">저장</th>
+            </tr>
+          </thead>
+          <tbody id="meas-table-body">
+            <tr><td colspan="12" style="padding:24px;text-align:center;color:var(--slate-400);">🔄 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -2876,11 +2910,14 @@ async function savePDF() {
 function switchMainTab(tab) {
   document.getElementById("tab-exam-btn").classList.toggle("active", tab === "exam");
   document.getElementById("tab-results-btn").classList.toggle("active", tab === "results");
+  document.getElementById("tab-meas-btn").classList.toggle("active", tab === "meas");
   document.getElementById("tab-report-btn").classList.toggle("active", tab === "report");
   document.getElementById("panel-exam").style.display = tab === "exam" ? "block" : "none";
   document.getElementById("panel-results").style.display = tab === "results" ? "block" : "none";
+  document.getElementById("panel-meas").style.display = tab === "meas" ? "block" : "none";
   document.getElementById("panel-report").style.display = tab === "report" ? "block" : "none";
   if (tab === "results") loadSessionList();
+  if (tab === "meas") loadMeasTable();
   if (tab === "report") loadReportList();
 }
 
@@ -3098,6 +3135,147 @@ function renderResultSheet(session) {
 
   document.getElementById("result-sheet-content").innerHTML =
     headerHtml + scoreTableHtml + itemsHtml + extraHtml + footerHtml + `</div>`;
+}
+
+// ──────────────────────────────────────────
+// 신체계측 자료입력 (인라인 테이블)
+// ──────────────────────────────────────────
+async function loadMeasTable() {
+  const tbody = document.getElementById("meas-table-body");
+  tbody.innerHTML = `<tr><td colspan="12" style="padding:24px;text-align:center;color:var(--slate-400);">🔄 불러오는 중...</td></tr>`;
+  try {
+    const rows = await sbFetch("kasq_sessions?select=*&order=created_at.desc&limit=100");
+    renderMeasTable(rows || []);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="12" style="padding:24px;text-align:center;color:#dc2626;">⚠️ 불러오기 실패: ${e.message}</td></tr>`;
+  }
+}
+
+function renderMeasTable(sessions) {
+  const tbody = document.getElementById("meas-table-body");
+  if (!sessions.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="padding:24px;text-align:center;color:var(--slate-400);">검사 결과가 없습니다</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sessions.map((s, idx) => {
+    const age  = parseInt(s.child_age) || 0;
+    const sex  = s.gender === "여" ? 2 : 1;
+    const meas = getMeasData(s);
+    const htV  = meas.ht  || "";
+    const wtV  = meas.wt  || "";
+    const hcV  = meas.hc  || "";
+    const bmiV = (htV && wtV) ? Math.round(wtV / ((htV/100)**2) * 10)/10 : "";
+    const htP  = htV  ? fmtP(calcPctile(htV,  age, sex, "ht"))  : "";
+    const wtP  = wtV  ? fmtP(calcPctile(wtV,  age, sex, "wt"))  : "";
+    const hcP  = hcV  ? fmtP(calcPctile(hcV,  age, sex, "hc"))  : "";
+    const bmiP = bmiV ? fmtP(calcPctile(bmiV, age, sex, "bmi")) : "";
+    const rowBg = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
+    return `<tr style="background:${rowBg};border-bottom:1px solid var(--slate-100);">
+      <td style="padding:10px 12px;font-weight:700;white-space:nowrap;">${s.child_name || "—"}</td>
+      <td style="padding:10px 8px;text-align:center;">${s.gender || "—"}</td>
+      <td style="padding:10px 8px;text-align:center;white-space:nowrap;">${age}개월</td>
+      <td style="padding:6px 4px;text-align:center;">
+        <input type="number" step="0.1" placeholder="—" value="${htV}"
+          data-sid="${s.session_id}" data-field="ht" data-age="${age}" data-sex="${sex}"
+          style="width:68px;border:1.5px solid var(--slate-200);border-radius:6px;padding:5px 6px;font-size:13px;font-family:inherit;text-align:center;"
+          oninput="onMeasInput(this)">
+      </td>
+      <td id="p-ht-${s.session_id}" style="padding:10px 6px;text-align:center;font-weight:700;font-size:12px;">${pctileCell(htP)}</td>
+      <td style="padding:6px 4px;text-align:center;">
+        <input type="number" step="0.1" placeholder="—" value="${wtV}"
+          data-sid="${s.session_id}" data-field="wt" data-age="${age}" data-sex="${sex}"
+          style="width:68px;border:1.5px solid var(--slate-200);border-radius:6px;padding:5px 6px;font-size:13px;font-family:inherit;text-align:center;"
+          oninput="onMeasInput(this)">
+      </td>
+      <td id="p-wt-${s.session_id}" style="padding:10px 6px;text-align:center;font-weight:700;font-size:12px;">${pctileCell(wtP)}</td>
+      <td style="padding:6px 4px;text-align:center;">
+        <input type="number" step="0.1" placeholder="—" value="${hcV}"
+          data-sid="${s.session_id}" data-field="hc" data-age="${age}" data-sex="${sex}"
+          style="width:68px;border:1.5px solid var(--slate-200);border-radius:6px;padding:5px 6px;font-size:13px;font-family:inherit;text-align:center;"
+          oninput="onMeasInput(this)">
+      </td>
+      <td id="p-hc-${s.session_id}" style="padding:10px 6px;text-align:center;font-weight:700;font-size:12px;">${pctileCell(hcP)}</td>
+      <td id="bmi-${s.session_id}" style="padding:10px 6px;text-align:center;font-size:12px;font-weight:700;color:var(--slate-600);">${bmiV || "—"}</td>
+      <td id="p-bmi-${s.session_id}" style="padding:10px 6px;text-align:center;font-weight:700;font-size:12px;">${pctileCell(bmiP)}</td>
+      <td style="padding:6px 8px;text-align:center;">
+        <button id="save-btn-${s.session_id}" onclick="saveMeasRow('${s.session_id}')"
+          style="background:var(--primary);color:white;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">
+          💾 저장
+        </button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function getMeasData(s) {
+  if (!s.report_data) return {};
+  try {
+    const d = typeof s.report_data === "string" ? JSON.parse(s.report_data) : s.report_data;
+    return d.meas || {};
+  } catch { return {}; }
+}
+
+function fmtP(p) {
+  return (p !== null && p !== undefined) ? Math.round(p) : "";
+}
+
+function pctileCell(p) {
+  if (p === "" || p === null || p === undefined) return `<span style="color:var(--slate-300);">—</span>`;
+  const isWarn = p < 3 || p > 97;
+  return `<span style="background:${isWarn ? "#fee2e2" : "#dcfce7"};color:${isWarn ? "#dc2626" : "#16a34a"};border-radius:5px;padding:2px 7px;">${p}p</span>`;
+}
+
+function onMeasInput(input) {
+  const sid = input.dataset.sid;
+  const age = parseInt(input.dataset.age);
+  const sex = parseInt(input.dataset.sex);
+  const row = input.closest("tr");
+  const htEl = row.querySelector(`input[data-field="ht"]`);
+  const wtEl = row.querySelector(`input[data-field="wt"]`);
+  const htV  = parseFloat(htEl?.value);
+  const wtV  = parseFloat(wtEl?.value);
+  const bmiEl = document.getElementById(`bmi-${sid}`);
+  if (htV > 0 && wtV > 0) {
+    const bmi = Math.round(wtV / ((htV/100)**2) * 10) / 10;
+    bmiEl.textContent = bmi;
+    document.getElementById(`p-bmi-${sid}`).innerHTML = pctileCell(fmtP(calcPctile(bmi, age, sex, "bmi")));
+  } else {
+    bmiEl.textContent = "—";
+    document.getElementById(`p-bmi-${sid}`).innerHTML = pctileCell("");
+  }
+  const field = input.dataset.field;
+  const val   = parseFloat(input.value);
+  const pEl   = document.getElementById(`p-${field}-${sid}`);
+  if (pEl) pEl.innerHTML = val > 0 ? pctileCell(fmtP(calcPctile(val, age, sex, field))) : pctileCell("");
+  const btn = document.getElementById(`save-btn-${sid}`);
+  if (btn) { btn.style.background = "#d97706"; btn.textContent = "💾 저장*"; }
+}
+
+async function saveMeasRow(sid) {
+  const btn = document.getElementById(`save-btn-${sid}`);
+  const row = btn.closest("tr");
+  const firstInput = row.querySelector("input[data-field]");
+  const age = parseInt(firstInput.dataset.age);
+  const sex = parseInt(firstInput.dataset.sex);
+  const meas = {};
+  row.querySelectorAll("input[data-field]").forEach(inp => {
+    const v = parseFloat(inp.value);
+    if (v > 0) meas[inp.dataset.field] = v;
+  });
+  if (meas.ht && meas.wt) meas.bmi = Math.round(meas.wt / ((meas.ht/100)**2) * 10) / 10;
+  ["ht","wt","hc","bmi"].forEach(f => {
+    if (meas[f]) { const p = calcPctile(meas[f], age, sex, f); if (p !== null) meas[f + "_p"] = Math.round(p); }
+  });
+  const payload = { report_data: JSON.stringify({ meas, saved_at: new Date().toISOString() }) };
+  btn.textContent = "저장 중..."; btn.disabled = true; btn.style.background = "var(--slate-400)";
+  try {
+    await sbFetch(`kasq_sessions?session_id=eq.${sid}`, { method: "PATCH", body: payload });
+    btn.textContent = "✅ 저장됨"; btn.style.background = "#16a34a"; btn.disabled = false;
+    setTimeout(() => { btn.textContent = "💾 저장"; btn.style.background = "var(--primary)"; }, 2000);
+  } catch(e) {
+    btn.textContent = "💾 저장"; btn.style.background = "var(--primary)"; btn.disabled = false;
+    alert("저장 실패: " + e.message);
+  }
 }
 
 // ──────────────────────────────────────────
