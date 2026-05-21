@@ -791,6 +791,14 @@
         <button class="filter-btn" id="filter-completed" onclick="setFilter('completed')">완료</button>
         <button class="filter-btn" id="filter-pending" onclick="setFilter('pending')">진행중</button>
       </div>
+      <!-- 날짜 범위 필터 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <label style="font-size:13px;font-weight:700;color:var(--slate-600);">📅 날짜 범위:</label>
+        <input type="date" id="filter-date-from" style="border:1.5px solid var(--slate-200);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;" onchange="renderSessionList()">
+        <span style="font-size:13px;color:var(--slate-400);">~</span>
+        <input type="date" id="filter-date-to" style="border:1.5px solid var(--slate-200);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;" onchange="renderSessionList()">
+        <button onclick="clearDateFilter()" style="background:var(--slate-100);border:1.5px solid var(--slate-200);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--slate-600);">✕ 초기화</button>
+      </div>
       <button class="btn-secondary" onclick="loadSessionList()" style="margin-bottom:14px;">🔄 새로고침</button>
       <div id="session-list">
         <div class="empty-state">📋 검사 결과를 불러오는 중...</div>
@@ -2735,8 +2743,17 @@ function setFilter(f) {
 
 function renderSessionList() {
   const el = document.getElementById("session-list");
-  const filtered = currentFilter === "all" ? allSessions
+  let filtered = currentFilter === "all" ? allSessions
     : allSessions.filter(s => s.status === currentFilter);
+
+  // 날짜 범위 필터
+  const fromEl = document.getElementById("filter-date-from");
+  const toEl   = document.getElementById("filter-date-to");
+  const from   = fromEl && fromEl.value ? fromEl.value : null;
+  const to     = toEl   && toEl.value   ? toEl.value   : null;
+  if (from) filtered = filtered.filter(s => s.exam_date && s.exam_date >= from);
+  if (to)   filtered = filtered.filter(s => s.exam_date && s.exam_date <= to);
+
   if (!filtered.length) { el.innerHTML = '<div class="empty-state">검사 결과가 없습니다</div>'; return; }
   el.innerHTML = filtered.map(s => `
     <div class="session-item" onclick='showResultSheet(${JSON.stringify(s)})'>
@@ -2749,6 +2766,14 @@ function renderSessionList() {
       <button onclick="event.stopPropagation();deleteSession('${s.session_id}')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;">삭제</button>
     </div>
   `).join("");
+}
+
+function clearDateFilter() {
+  const fromEl = document.getElementById("filter-date-from");
+  const toEl   = document.getElementById("filter-date-to");
+  if (fromEl) fromEl.value = "";
+  if (toEl)   toEl.value   = "";
+  renderSessionList();
 }
 
 async function deleteSession(sid) {
@@ -3544,15 +3569,23 @@ function applyMeasToReport() {
 
 async function saveReport() {
   if (!_currentReportSession) return;
-  const notesEl = document.getElementById("r_notes");
-  const notes = notesEl ? notesEl.value : "";
+  const notesEl      = document.getElementById("r_notes");
+  const examDateEl   = document.getElementById("r_exam_date");
+  const judgeOkEl    = document.getElementById("r_judge_ok");
+  const judgeCautEl  = document.getElementById("r_judge_caution");
+  const judgeEvalEl  = document.getElementById("r_judge_eval");
+  const notes    = notesEl    ? notesEl.value    : "";
+  const examDate = examDateEl ? examDateEl.value : _currentReportSession.exam_date;
+  const judge    = judgeOkEl?.checked ? "ok" : judgeCautEl?.checked ? "caution" : judgeEvalEl?.checked ? "eval" : "";
 
   const payload = {
     report_data: JSON.stringify({
       meas: _measData,
       notes,
+      judge,
       saved_at: new Date().toISOString()
-    })
+    }),
+    ...(examDate && examDate !== _currentReportSession.exam_date ? { exam_date: examDate } : {})
   };
 
   const btn = document.getElementById("report-save-btn");
@@ -3563,6 +3596,7 @@ async function saveReport() {
       method: "PATCH", body: payload
     });
     _currentReportSession.report_data = payload.report_data;
+    if (examDate) _currentReportSession.exam_date = examDate;
     btn.textContent = "✅ 저장됨";
     setTimeout(() => { btn.textContent = "💾 저장"; btn.disabled = false; }, 1500);
   } catch(e) {
@@ -3792,11 +3826,11 @@ function renderReportForm(session) {
   <table>
     <tr>
       <td style="font-weight:800;width:12%">종합판정</td>
-      <td style="background:#fef08a"><input type="checkbox" id="r_judge_ok" ${data && domains.every(d => !isFollowUp(scores[d]||0, data.cutoff[d]||[0,0,0])) ? "checked" : ""}></td>
-      <td class="auto-fill" style="width:18%">양호</td>
-      <td><input type="checkbox"></td>
+      <td><input type="checkbox" id="r_judge_ok" ${savedReport.judge === "ok" ? "checked" : ""}></td>
+      <td style="width:18%">양호</td>
+      <td><input type="checkbox" id="r_judge_caution" ${savedReport.judge === "caution" ? "checked" : ""}></td>
       <td style="width:18%">주의</td>
-      <td><input type="checkbox"></td>
+      <td><input type="checkbox" id="r_judge_eval" ${savedReport.judge === "eval" ? "checked" : ""}></td>
       <td>정밀평가필요</td>
     </tr>
   </table>
@@ -3819,7 +3853,7 @@ function renderReportForm(session) {
     </tr>
     <tr>
       <td style="font-weight:700">검진일</td>
-      <td class="auto-fill">${session.exam_date || ""}</td>
+      <td class="auto-fill"><input type="date" id="r_exam_date" value="${session.exam_date || ""}" style="border:none;background:transparent;font-family:inherit;font-size:11px;font-weight:700;width:100%;cursor:pointer;"></td>
       <td></td>
       <td style="font-weight:700">의사</td>
       <td>문수정</td>
