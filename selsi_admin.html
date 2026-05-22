@@ -1202,6 +1202,15 @@ function showResultModal(r) {
     // 직접 체크 구간만 필터
     const directItems = ITEMS[type].filter(i => i.mo >= lo && i.mo <= hi);
     if (!directItems.length) return "";
+    // 연령구간 레이블 및 색상 맵
+    const agLabels = {
+      "0-5":   { label:"0~5개월",   bg:"#f0f9ff", clr:"#0369a1" },
+      "6-11":  { label:"6~11개월",  bg:"#fdf4ff", clr:"#7e22ce" },
+      "12-17": { label:"12~17개월", bg:"#fff7ed", clr:"#c2410c" },
+      "18-23": { label:"18~23개월", bg:"#fefce8", clr:"#854d0e" },
+      "24-29": { label:"24~29개월", bg:"#f0fdf4", clr:"#166534" },
+      "30-36": { label:"30~36개월", bg:"#f8fafc", clr:"#334155" },
+    };
     const rows = directItems.map((item, idx) => {
       const ans = state.answers[item.id];
       const pass = ans === true;
@@ -1209,9 +1218,12 @@ function showResultModal(r) {
       const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
       const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
       const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+      const agInfo = agLabels[item.ag] || { label: item.ag, bg:"#f1f5f9", clr:"#475569" };
+      const agBadge = `<span style="display:inline-block;background:${agInfo.bg};color:${agInfo.clr};font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;border:1px solid ${agInfo.clr}33;">${agInfo.label}</span>`;
       return `<tr style="border-bottom:1px solid #f1f5f9;background:${idx%2===0?"white":"#fafcff"};">
         <td style="padding:8px 10px;font-size:11px;color:#94a3b8;font-weight:700;white-space:nowrap;">${item.id}</td>
         <td style="padding:8px 10px;font-size:13px;color:#334155;line-height:1.55;">${item.text}</td>
+        <td style="padding:8px 10px;white-space:nowrap;">${agBadge}<div style="font-size:10px;color:#94a3b8;margin-top:3px;">${item.mo}개월</div></td>
         <td style="padding:8px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
         <td style="padding:8px 10px;text-align:center;">
           <span style="display:inline-block;background:${stBg};color:${stClr};font-size:12px;font-weight:700;padding:4px 12px;border-radius:7px;white-space:nowrap;">${stLbl}</span>
@@ -1226,6 +1238,7 @@ function showResultModal(r) {
         <thead><tr style="background:#e8f0fe;">
           <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">번호</th>
           <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;">문항 내용</th>
+          <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">연령구간</th>
           <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">영역</th>
           <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:center;white-space:nowrap;">결과</th>
         </tr></thead>
@@ -1871,6 +1884,14 @@ function downloadPDF() {
     const lo = age - 6, hi = age + 6;
     const directItems = ITEMS[type].filter(i => i.mo >= lo && i.mo <= hi);
     if (!directItems.length) return "";
+    const pdfAgLabels = {
+      "0-5":   { label:"0~5개월",   bg:"#f0f9ff", clr:"#0369a1" },
+      "6-11":  { label:"6~11개월",  bg:"#fdf4ff", clr:"#7e22ce" },
+      "12-17": { label:"12~17개월", bg:"#fff7ed", clr:"#c2410c" },
+      "18-23": { label:"18~23개월", bg:"#fefce8", clr:"#854d0e" },
+      "24-29": { label:"24~29개월", bg:"#f0fdf4", clr:"#166534" },
+      "30-36": { label:"30~36개월", bg:"#f8fafc", clr:"#334155" },
+    };
     const rows = directItems.map((item, idx) => {
       const ans = state.answers[item.id];
       const pass = ans === true;
@@ -1878,9 +1899,14 @@ function downloadPDF() {
       const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
       const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
       const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+      const ag = pdfAgLabels[item.ag] || { label: item.ag, bg:"#f1f5f9", clr:"#475569" };
       return `<tr style="border-bottom:1px solid #f4f6f8;background:${idx%2===0?"white":"#fafcff"};">
         <td style="padding:4px 7px;font-size:9.5px;color:#94a3b8;white-space:nowrap;font-weight:600;">${item.id}</td>
         <td style="padding:4px 7px;font-size:10px;color:#334155;line-height:1.5;">${item.text}</td>
+        <td style="padding:4px 6px;white-space:nowrap;">
+          <span style="display:inline-block;background:${ag.bg};color:${ag.clr};font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px;border:1px solid ${ag.clr}33;">${ag.label}</span>
+          <div style="font-size:8px;color:#94a3b8;margin-top:2px;">${item.mo}개월</div>
+        </td>
         <td style="padding:4px 7px;font-size:9px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
         <td style="padding:4px 7px;text-align:center;">
           <span style="font-size:9.5px;font-weight:800;color:${stClr};background:${stBg};padding:2px 7px;border-radius:4px;white-space:nowrap;">${stLbl}</span>
@@ -1896,6 +1922,7 @@ function downloadPDF() {
           <thead><tr style="background:#e8f0fe;">
             <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">번호</th>
             <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;">문항 내용</th>
+            <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">연령구간</th>
             <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">영역</th>
             <th style="padding:5px 7px;text-align:center;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">결과</th>
           </tr></thead>
