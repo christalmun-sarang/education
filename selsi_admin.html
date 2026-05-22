@@ -1195,46 +1195,103 @@ function showResultModal(r) {
       <tbody>${rows}</tbody></table></div>`;
   }
 
+  // 직접 체크 항목만 상세 테이블
+  function detailTable(type, label) {
+    const age = getAge();
+    const lo = age - 6, hi = age + 6;
+    // 직접 체크 구간만 필터
+    const directItems = ITEMS[type].filter(i => i.mo >= lo && i.mo <= hi);
+    if (!directItems.length) return "";
+    const rows = directItems.map((item, idx) => {
+      const ans = state.answers[item.id];
+      const pass = ans === true;
+      const fail = ans === false;
+      const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
+      const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
+      const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+      return `<tr style="border-bottom:1px solid #f1f5f9;background:${idx%2===0?"white":"#fafcff"};">
+        <td style="padding:8px 10px;font-size:11px;color:#94a3b8;font-weight:700;white-space:nowrap;">${item.id}</td>
+        <td style="padding:8px 10px;font-size:13px;color:#334155;line-height:1.55;">${item.text}</td>
+        <td style="padding:8px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
+        <td style="padding:8px 10px;text-align:center;">
+          <span style="display:inline-block;background:${stBg};color:${stClr};font-size:12px;font-weight:700;padding:4px 12px;border-radius:7px;white-space:nowrap;">${stLbl}</span>
+        </td>
+      </tr>`;
+    }).join("");
+    const passed = directItems.filter(i => state.answers[i.id] === true).length;
+    return `<div class="profile-section" style="margin-top:20px;">
+      <div class="section-title">${label} 직접 체크 문항 상세</div>
+      <div style="font-size:12px;color:var(--slate-400);margin-bottom:10px;">생활연령 ±6개월 구간(${lo}~${hi}개월) 직접 체크 항목 — ${passed}/${directItems.length} 통과</div>
+      <table style="width:100%;border-collapse:collapse;background:white;border-radius:14px;overflow:hidden;border:1.5px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);">
+        <thead><tr style="background:#e8f0fe;">
+          <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">번호</th>
+          <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;">문항 내용</th>
+          <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">영역</th>
+          <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:center;white-space:nowrap;">결과</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
   let opinion = "";
   if (sc.r.interp.cls==="normal" && sc.e.interp.cls==="normal")
     opinion = "수용언어와 표현언어 두 영역 모두 <strong>정상 발달</strong> 범위 내에 있습니다.";
   else opinion = "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
 
+  // 기존 팝업 제거, 전체 페이지형 오버레이로 대체
   let modal = document.getElementById("remote-result-modal");
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "remote-result-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;overflow-y:auto;padding:20px;display:flex;align-items:flex-start;justify-content:center;";
+    modal.style.cssText = "position:fixed;inset:0;background:#f0f4ff;z-index:9000;overflow-y:auto;";
     document.body.appendChild(modal);
   }
   modal.innerHTML = `
-    <div style="background:white;border-radius:20px;max-width:860px;width:100%;padding:28px;margin:auto;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div style="font-size:20px;font-weight:800;">📊 검사 결과 — ${r.child_name || ""}</div>
-        <button onclick="document.getElementById('remote-result-modal').style.display='none'"
-          style="padding:8px 16px;background:var(--slate-100);color:var(--slate-600);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">✕ 닫기</button>
-      </div>
-      <div class="result-header">
+    <!-- 상단 헤더 -->
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;padding:0;position:sticky;top:0;z-index:10;box-shadow:0 2px 16px rgba(37,99,235,0.25);">
+      <div style="max-width:900px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;">
+        <div style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;padding:5px 14px;font-weight:900;font-size:17px;letter-spacing:2px;">SELSI</div>
         <div>
-          <div class="result-name">${state.childName} (${state.gender || "-"})</div>
-          <div class="result-info">검사일: ${examDateFmt} | 검사자: ${state.examiner || "-"}</div>
+          <div style="font-size:16px;font-weight:800;">검사 결과</div>
+          <div style="font-size:11px;opacity:0.75;margin-top:1px;">Sequenced Language Scale for Infants</div>
         </div>
-        <div class="result-age-badge">생활연령<br><strong>${sc.age}개월</strong></div>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button onclick="downloadPDF()" style="padding:9px 18px;background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📄 PDF 저장</button>
+          <button onclick="document.getElementById('remote-result-modal').style.display='none'"
+            style="padding:9px 18px;background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✕ 닫기</button>
+        </div>
       </div>
-      <div class="score-cards">${sCard("🎧 수용언어", sc.r)}${sCard("🗣️ 표현언어", sc.e)}</div>
-      ${pTable(rProfile,"🎧 수용언어")}${pTable(eProfile,"🗣️ 표현언어")}
-      <div class="opinion-box">
-        <div class="opinion-title">📋 종합 소견</div>
-        <div class="opinion-text">${state.childName}(생활연령 ${sc.age}개월)의 SELSI 결과, 수용언어 등가월령 <strong>${sc.r.equiv}개월</strong>, 표현언어 등가월령 <strong>${sc.e.equiv}개월</strong>으로 측정되었습니다. ${opinion}</div>
-        <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
-        <button onclick="downloadPDF()" class="btn-green" style="flex:1;min-width:140px;">📄 PDF 결과지 저장</button>
-        <button onclick="showResultQR()" style="flex:1;min-width:120px;padding:12px;background:#6366f1;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📲 QR 공유</button>
-        <button onclick="document.getElementById('remote-result-modal').style.display='none'" class="btn-secondary">닫기</button>
+    </div>
+
+    <!-- 본문 -->
+    <div style="max-width:900px;margin:0 auto;padding:28px 16px 60px;">
+      <div class="card">
+        <div class="result-header">
+          <div>
+            <div class="result-name">${state.childName} (${state.gender || "-"})</div>
+            <div class="result-info">검사일: ${examDateFmt} | 검사자: ${state.examiner || "-"}</div>
+          </div>
+          <div class="result-age-badge">생활연령<br><strong>${sc.age}개월</strong></div>
+        </div>
+        <div class="score-cards">${sCard("🎧 수용언어", sc.r)}${sCard("🗣️ 표현언어", sc.e)}</div>
+        ${pTable(rProfile,"🎧 수용언어")}
+        ${pTable(eProfile,"🗣️ 표현언어")}
+        ${detailTable("receptive","🎧 수용언어")}
+        ${detailTable("expressive","🗣️ 표현언어")}
+        <div class="opinion-box" style="margin-top:24px;">
+          <div class="opinion-title">📋 종합 소견</div>
+          <div class="opinion-text">${state.childName}(생활연령 ${sc.age}개월)의 SELSI 결과, 수용언어 등가월령 <strong>${sc.r.equiv}개월</strong>, 표현언어 등가월령 <strong>${sc.e.equiv}개월</strong>으로 측정되었습니다. ${opinion}</div>
+          <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+          <button onclick="downloadPDF()" class="btn-green" style="flex:1;min-width:140px;">📄 PDF 결과지 저장</button>
+          <button onclick="showResultQR()" style="flex:1;min-width:120px;padding:12px;background:#6366f1;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📲 QR 공유</button>
+          <button onclick="document.getElementById('remote-result-modal').style.display='none'" class="btn-secondary">닫기</button>
+        </div>
       </div>
     </div>`;
-  modal.style.display = "flex";
+  modal.style.display = "block";
 }
 
 // ── 검사 시작 ──
@@ -1668,66 +1725,38 @@ function renderResult() {
   else if (eOnly) opinionText += `<strong>표현언어(${sc.e.interp.label})</strong>에서 발달 지연이 의심되며, 수용언어는 정상 범위에 있습니다. 언어 표현 능력 향상을 위한 전문가 상담이 권장됩니다.`;
   else opinionText += "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
 
-  // 문항별 상세 테이블 생성
+  // 문항별 상세 테이블 생성 — 직접 체크 항목만
   function itemDetailTable(type, label) {
     const age = getAge();
     const lo = age - 6, hi = age + 6;
-    const rows = AGE_GROUPS.map(g => {
-      const items = ITEMS[type].filter(i => i.ag === g.id);
-      const allBelow = items.every(i => i.mo < lo);
-      const allAbove = items.every(i => i.mo > hi);
-      const autoMode = allBelow ? "auto-pass" : allAbove ? "auto-fail" : "mixed";
-      const itemRows = items.map((item, idx) => {
-        const ans = state.answers[item.id];
-        const isAuto = autoMode !== "mixed";
-        const pass = isAuto ? (autoMode === "auto-pass") : (ans === true);
-        const fail = isAuto ? (autoMode === "auto-fail") : (ans === false);
-        const statusBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
-        const statusTxt = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
-        const statusLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
-        const autoTag   = isAuto
-          ? `<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`
-          : "";
-        return `<tr style="border-bottom:1px solid #f1f5f9;background:${idx%2===0?"white":"#fafcff"};">
-          <td style="padding:7px 10px;font-size:12px;color:#64748b;font-weight:600;white-space:nowrap;">${item.id}</td>
-          <td style="padding:7px 10px;font-size:12px;color:#334155;line-height:1.5;">${item.text}${autoTag}</td>
-          <td style="padding:7px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
-          <td style="padding:7px 10px;text-align:center;">
-            <span style="display:inline-block;background:${statusBg};color:${statusTxt};font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;white-space:nowrap;">${statusLbl}</span>
-          </td>
-        </tr>`;
-      }).join("");
-      const passed = items.filter(i => {
-        if (autoMode === "auto-pass") return true;
-        if (autoMode === "auto-fail") return false;
-        return state.answers[i.id] === true;
-      }).length;
-      const pct = items.length > 0 ? Math.round(passed/items.length*100) : 0;
-      const groupColor = pct >= 80 ? "#16a34a" : pct >= 50 ? "#d97706" : "#dc2626";
-      return `
-        <tr style="background:#f1f5f9;">
-          <td colspan="4" style="padding:8px 12px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:13px;font-weight:800;color:#1e293b;">${g.label}</span>
-              <span style="font-size:11px;color:#64748b;">${passed}/${items.length} 통과</span>
-              <div style="flex:1;height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;max-width:120px;">
-                <div style="width:${pct}%;height:100%;background:${groupColor};border-radius:99px;"></div>
-              </div>
-              <span style="font-size:12px;font-weight:700;color:${groupColor};">${pct}%</span>
-              ${autoMode!=="mixed"?`<span style="font-size:10px;padding:1px 7px;border-radius:4px;font-weight:700;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`:""}
-            </div>
-          </td>
-        </tr>
-        ${itemRows}`;
+    // 직접 체크 구간 항목만
+    const directItems = ITEMS[type].filter(i => i.mo >= lo && i.mo <= hi);
+    if (!directItems.length) return "";
+    const rows = directItems.map((item, idx) => {
+      const ans = state.answers[item.id];
+      const pass = ans === true;
+      const fail = ans === false;
+      const statusBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
+      const statusTxt = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
+      const statusLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+      return `<tr style="border-bottom:1px solid #f1f5f9;background:${idx%2===0?"white":"#fafcff"};">
+        <td style="padding:7px 10px;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap;">${item.id}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#334155;line-height:1.5;">${item.text}</td>
+        <td style="padding:7px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
+        <td style="padding:7px 10px;text-align:center;">
+          <span style="display:inline-block;background:${statusBg};color:${statusTxt};font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;white-space:nowrap;">${statusLbl}</span>
+        </td>
+      </tr>`;
     }).join("");
-
+    const passed = directItems.filter(i => state.answers[i.id] === true).length;
     return `
       <div class="profile-section" style="margin-top:24px;">
-        <div class="section-title" style="margin-bottom:12px;">${label} 문항별 상세 결과</div>
+        <div class="section-title" style="margin-bottom:4px;">${label} 직접 체크 문항 상세</div>
+        <div style="font-size:12px;color:var(--slate-400);margin-bottom:10px;">생활연령 ±6개월 구간 (${lo}~${hi}개월) — ${passed}/${directItems.length} 통과</div>
         <table style="width:100%;border-collapse:collapse;background:white;border-radius:14px;overflow:hidden;border:1.5px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);">
           <thead>
             <tr style="background:#e8f0fe;">
-              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">문항번호</th>
+              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">번호</th>
               <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;">문항 내용</th>
               <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">영역</th>
               <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:center;white-space:nowrap;">결과</th>
@@ -1836,51 +1865,33 @@ function downloadPDF() {
     </div>`;
   }
 
-  // PDF용 문항별 상세 테이블
+  // PDF용 문항별 상세 테이블 — 직접 체크 항목만
   function pdfItemTable(type, label) {
     const age = getAge();
     const lo = age - 6, hi = age + 6;
-    const rows = AGE_GROUPS.map(g => {
-      const items = ITEMS[type].filter(i => i.ag === g.id);
-      const allBelow = items.every(i => i.mo < lo);
-      const allAbove = items.every(i => i.mo > hi);
-      const autoMode = allBelow ? "auto-pass" : allAbove ? "auto-fail" : "mixed";
-      const passed = items.filter(i => {
-        if (autoMode === "auto-pass") return true;
-        if (autoMode === "auto-fail") return false;
-        return state.answers[i.id] === true;
-      }).length;
-      const pct = items.length > 0 ? Math.round(passed/items.length*100) : 0;
-      const gColor = pct >= 80 ? "#16a34a" : pct >= 50 ? "#d97706" : "#dc2626";
-      const headerRow = `<tr style="background:#f1f5f9;">
-        <td colspan="4" style="padding:5px 8px;">
-          <span style="font-size:10.5px;font-weight:800;color:#1e293b;">${g.label}</span>
-          <span style="font-size:9.5px;color:#64748b;margin-left:6px;">${passed}/${items.length}</span>
-          <span style="font-size:10px;font-weight:800;color:${gColor};margin-left:4px;">${pct}%</span>
-          ${autoMode!=="mixed"?`<span style="font-size:8.5px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`:""}
+    const directItems = ITEMS[type].filter(i => i.mo >= lo && i.mo <= hi);
+    if (!directItems.length) return "";
+    const rows = directItems.map((item, idx) => {
+      const ans = state.answers[item.id];
+      const pass = ans === true;
+      const fail = ans === false;
+      const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
+      const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
+      const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+      return `<tr style="border-bottom:1px solid #f4f6f8;background:${idx%2===0?"white":"#fafcff"};">
+        <td style="padding:4px 7px;font-size:9.5px;color:#94a3b8;white-space:nowrap;font-weight:600;">${item.id}</td>
+        <td style="padding:4px 7px;font-size:10px;color:#334155;line-height:1.5;">${item.text}</td>
+        <td style="padding:4px 7px;font-size:9px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
+        <td style="padding:4px 7px;text-align:center;">
+          <span style="font-size:9.5px;font-weight:800;color:${stClr};background:${stBg};padding:2px 7px;border-radius:4px;white-space:nowrap;">${stLbl}</span>
         </td>
       </tr>`;
-      const itemRows = items.map((item, idx) => {
-        const ans = state.answers[item.id];
-        const pass = autoMode === "auto-pass" ? true : autoMode === "auto-fail" ? false : (ans === true);
-        const fail = autoMode === "auto-pass" ? false : autoMode === "auto-fail" ? true : (ans === false);
-        const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
-        const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
-        const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
-        return `<tr style="border-bottom:1px solid #f4f6f8;background:${idx%2===0?"white":"#fafcff"};">
-          <td style="padding:4px 7px;font-size:9.5px;color:#94a3b8;white-space:nowrap;font-weight:600;">${item.id}</td>
-          <td style="padding:4px 7px;font-size:10px;color:#334155;line-height:1.5;">${item.text}</td>
-          <td style="padding:4px 7px;font-size:9px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
-          <td style="padding:4px 7px;text-align:center;">
-            <span style="font-size:9.5px;font-weight:800;color:${stClr};background:${stBg};padding:2px 7px;border-radius:4px;white-space:nowrap;">${stLbl}</span>
-          </td>
-        </tr>`;
-      }).join("");
-      return headerRow + itemRows;
     }).join("");
+    const passed = directItems.filter(i => state.answers[i.id] === true).length;
     return `
       <div style="margin-top:14px;">
-        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">${label} 문항별 상세 결과</div>
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:3px;padding-left:2px;">${label} 직접 체크 문항 상세</div>
+        <div style="font-size:9.5px;color:#94a3b8;margin-bottom:6px;padding-left:2px;">생활연령 ±6개월 (${lo}~${hi}개월) — ${passed}/${directItems.length} 통과</div>
         <table style="width:100%;border-collapse:collapse;font-size:10px;background:white;border-radius:8px;overflow:hidden;border:1.5px solid #e2e8f0;">
           <thead><tr style="background:#e8f0fe;">
             <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">번호</th>
