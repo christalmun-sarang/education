@@ -380,6 +380,29 @@
     flex-shrink: 0;
   }
   .link-del-btn:hover { background: #fca5a5; }
+  .link-drag-handle {
+    width: 28px; height: 32px;
+    border: none; background: transparent;
+    color: #b0bec5;
+    border-radius: 8px;
+    cursor: grab;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    touch-action: none;
+    user-select: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .link-drag-handle:hover { color: var(--primary); background: var(--tab-inactive); }
+  .link-drag-handle:active { cursor: grabbing; }
+  .link-row.dragging {
+    opacity: 0.4;
+    background: var(--tab-inactive);
+    border-radius: 10px;
+  }
+  .link-row.drag-over {
+    border-top: 2px solid var(--primary-light);
+  }
   .link-add-btn {
     padding: 9px 18px;
     border: 1.5px dashed var(--border);
@@ -781,12 +804,14 @@
     const container = document.getElementById('link-rows');
     const rows = links.length ? links : [{name:'',url:''},{name:'',url:''},{name:'',url:''}];
     container.innerHTML = rows.map((l, i) => `
-      <div class="link-row" data-id="${l.id || ''}">
+      <div class="link-row" data-id="${l.id || ''}" draggable="true">
+        <span class="link-drag-handle" title="드래그하여 순서 변경">⠿</span>
         <input type="text"  placeholder="이름 (예: 환자방문관리)" value="${(l.name||'').replace(/"/g,'&quot;')}">
         <input type="url"   placeholder="URL (https://...)"       value="${(l.url ||'').replace(/"/g,'&quot;')}">
         <button class="link-del-btn" onclick="this.parentNode.remove()" title="삭제">×</button>
       </div>
     `).join('');
+    initDragSort();
   }
 
   function setStatus(msg, color) {
@@ -828,13 +853,63 @@
     const container = document.getElementById('link-rows');
     const row = document.createElement('div');
     row.className = 'link-row';
+    row.draggable = true;
     row.dataset.id = '';
     row.innerHTML = `
+      <span class="link-drag-handle" title="드래그하여 순서 변경">⠿</span>
       <input type="text" placeholder="이름 (예: 환자방문관리)">
       <input type="url"  placeholder="URL (https://...)">
       <button class="link-del-btn" onclick="this.parentNode.remove()" title="삭제">×</button>
     `;
     container.appendChild(row);
+    initDragSort();
+  }
+
+  // ── 드래그 앤 드롭 정렬 ──
+  function initDragSort() {
+    const container = document.getElementById('link-rows');
+    let dragSrc = null;
+
+    container.querySelectorAll('.link-row').forEach(row => {
+      // 핸들에서만 드래그 시작
+      const handle = row.querySelector('.link-drag-handle');
+      handle.addEventListener('mousedown', () => { row.draggable = true; });
+      handle.addEventListener('touchstart', () => { row.draggable = true; }, {passive:true});
+
+      row.addEventListener('dragstart', e => {
+        dragSrc = row;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        container.querySelectorAll('.link-row').forEach(r => r.classList.remove('drag-over'));
+        dragSrc = null;
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (row !== dragSrc) {
+          container.querySelectorAll('.link-row').forEach(r => r.classList.remove('drag-over'));
+          row.classList.add('drag-over');
+        }
+      });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        if (dragSrc && dragSrc !== row) {
+          // dragSrc를 row 앞으로 이동
+          const rows = [...container.querySelectorAll('.link-row')];
+          const srcIdx = rows.indexOf(dragSrc);
+          const tgtIdx = rows.indexOf(row);
+          if (srcIdx < tgtIdx) {
+            container.insertBefore(dragSrc, row.nextSibling);
+          } else {
+            container.insertBefore(dragSrc, row);
+          }
+        }
+        container.querySelectorAll('.link-row').forEach(r => r.classList.remove('drag-over'));
+      });
+    });
   }
 
   async function saveLinks() {
