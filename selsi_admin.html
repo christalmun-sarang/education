@@ -1668,6 +1668,76 @@ function renderResult() {
   else if (eOnly) opinionText += `<strong>표현언어(${sc.e.interp.label})</strong>에서 발달 지연이 의심되며, 수용언어는 정상 범위에 있습니다. 언어 표현 능력 향상을 위한 전문가 상담이 권장됩니다.`;
   else opinionText += "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
 
+  // 문항별 상세 테이블 생성
+  function itemDetailTable(type, label) {
+    const age = getAge();
+    const lo = age - 6, hi = age + 6;
+    const rows = AGE_GROUPS.map(g => {
+      const items = ITEMS[type].filter(i => i.ag === g.id);
+      const allBelow = items.every(i => i.mo < lo);
+      const allAbove = items.every(i => i.mo > hi);
+      const autoMode = allBelow ? "auto-pass" : allAbove ? "auto-fail" : "mixed";
+      const itemRows = items.map((item, idx) => {
+        const ans = state.answers[item.id];
+        const isAuto = autoMode !== "mixed";
+        const pass = isAuto ? (autoMode === "auto-pass") : (ans === true);
+        const fail = isAuto ? (autoMode === "auto-fail") : (ans === false);
+        const statusBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
+        const statusTxt = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
+        const statusLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+        const autoTag   = isAuto
+          ? `<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`
+          : "";
+        return `<tr style="border-bottom:1px solid #f1f5f9;background:${idx%2===0?"white":"#fafcff"};">
+          <td style="padding:7px 10px;font-size:12px;color:#64748b;font-weight:600;white-space:nowrap;">${item.id}</td>
+          <td style="padding:7px 10px;font-size:12px;color:#334155;line-height:1.5;">${item.text}${autoTag}</td>
+          <td style="padding:7px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
+          <td style="padding:7px 10px;text-align:center;">
+            <span style="display:inline-block;background:${statusBg};color:${statusTxt};font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;white-space:nowrap;">${statusLbl}</span>
+          </td>
+        </tr>`;
+      }).join("");
+      const passed = items.filter(i => {
+        if (autoMode === "auto-pass") return true;
+        if (autoMode === "auto-fail") return false;
+        return state.answers[i.id] === true;
+      }).length;
+      const pct = items.length > 0 ? Math.round(passed/items.length*100) : 0;
+      const groupColor = pct >= 80 ? "#16a34a" : pct >= 50 ? "#d97706" : "#dc2626";
+      return `
+        <tr style="background:#f1f5f9;">
+          <td colspan="4" style="padding:8px 12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;font-weight:800;color:#1e293b;">${g.label}</span>
+              <span style="font-size:11px;color:#64748b;">${passed}/${items.length} 통과</span>
+              <div style="flex:1;height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;max-width:120px;">
+                <div style="width:${pct}%;height:100%;background:${groupColor};border-radius:99px;"></div>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:${groupColor};">${pct}%</span>
+              ${autoMode!=="mixed"?`<span style="font-size:10px;padding:1px 7px;border-radius:4px;font-weight:700;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`:""}
+            </div>
+          </td>
+        </tr>
+        ${itemRows}`;
+    }).join("");
+
+    return `
+      <div class="profile-section" style="margin-top:24px;">
+        <div class="section-title" style="margin-bottom:12px;">${label} 문항별 상세 결과</div>
+        <table style="width:100%;border-collapse:collapse;background:white;border-radius:14px;overflow:hidden;border:1.5px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);">
+          <thead>
+            <tr style="background:#e8f0fe;">
+              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">문항번호</th>
+              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;">문항 내용</th>
+              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:left;white-space:nowrap;">영역</th>
+              <th style="padding:9px 10px;font-size:11px;font-weight:700;color:#475569;text-align:center;white-space:nowrap;">결과</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
   const html = `
     <div class="result-header">
       <div>
@@ -1682,7 +1752,9 @@ function renderResult() {
     </div>
     ${profileTable(rProfile, "🎧 수용언어")}
     ${profileTable(eProfile, "🗣️ 표현언어")}
-    <div class="opinion-box">
+    ${itemDetailTable("receptive", "🎧 수용언어")}
+    ${itemDetailTable("expressive", "🗣️ 표현언어")}
+    <div class="opinion-box" style="margin-top:24px;">
       <div class="opinion-title">📋 종합 소견</div>
       <div class="opinion-text">${opinionText}</div>
       <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다. 정확한 평가는 반드시 자격을 갖춘 언어치료사가 실시해야 합니다.</div>
@@ -1764,6 +1836,63 @@ function downloadPDF() {
     </div>`;
   }
 
+  // PDF용 문항별 상세 테이블
+  function pdfItemTable(type, label) {
+    const age = getAge();
+    const lo = age - 6, hi = age + 6;
+    const rows = AGE_GROUPS.map(g => {
+      const items = ITEMS[type].filter(i => i.ag === g.id);
+      const allBelow = items.every(i => i.mo < lo);
+      const allAbove = items.every(i => i.mo > hi);
+      const autoMode = allBelow ? "auto-pass" : allAbove ? "auto-fail" : "mixed";
+      const passed = items.filter(i => {
+        if (autoMode === "auto-pass") return true;
+        if (autoMode === "auto-fail") return false;
+        return state.answers[i.id] === true;
+      }).length;
+      const pct = items.length > 0 ? Math.round(passed/items.length*100) : 0;
+      const gColor = pct >= 80 ? "#16a34a" : pct >= 50 ? "#d97706" : "#dc2626";
+      const headerRow = `<tr style="background:#f1f5f9;">
+        <td colspan="4" style="padding:5px 8px;">
+          <span style="font-size:10.5px;font-weight:800;color:#1e293b;">${g.label}</span>
+          <span style="font-size:9.5px;color:#64748b;margin-left:6px;">${passed}/${items.length}</span>
+          <span style="font-size:10px;font-weight:800;color:${gColor};margin-left:4px;">${pct}%</span>
+          ${autoMode!=="mixed"?`<span style="font-size:8.5px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;background:${autoMode==="auto-pass"?"#dcfce7":"#fee2e2"};color:${autoMode==="auto-pass"?"#15803d":"#dc2626"};">${autoMode==="auto-pass"?"자동가능":"자동불가"}</span>`:""}
+        </td>
+      </tr>`;
+      const itemRows = items.map((item, idx) => {
+        const ans = state.answers[item.id];
+        const pass = autoMode === "auto-pass" ? true : autoMode === "auto-fail" ? false : (ans === true);
+        const fail = autoMode === "auto-pass" ? false : autoMode === "auto-fail" ? true : (ans === false);
+        const stBg  = pass ? "#f0fdf4" : fail ? "#fef2f2" : "#fffbeb";
+        const stClr = pass ? "#16a34a" : fail ? "#dc2626" : "#d97706";
+        const stLbl = pass ? "✅ 가능" : fail ? "❌ 불가능" : "－";
+        return `<tr style="border-bottom:1px solid #f4f6f8;background:${idx%2===0?"white":"#fafcff"};">
+          <td style="padding:4px 7px;font-size:9.5px;color:#94a3b8;white-space:nowrap;font-weight:600;">${item.id}</td>
+          <td style="padding:4px 7px;font-size:10px;color:#334155;line-height:1.5;">${item.text}</td>
+          <td style="padding:4px 7px;font-size:9px;color:#94a3b8;white-space:nowrap;">${item.note}</td>
+          <td style="padding:4px 7px;text-align:center;">
+            <span style="font-size:9.5px;font-weight:800;color:${stClr};background:${stBg};padding:2px 7px;border-radius:4px;white-space:nowrap;">${stLbl}</span>
+          </td>
+        </tr>`;
+      }).join("");
+      return headerRow + itemRows;
+    }).join("");
+    return `
+      <div style="margin-top:14px;">
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">${label} 문항별 상세 결과</div>
+        <table style="width:100%;border-collapse:collapse;font-size:10px;background:white;border-radius:8px;overflow:hidden;border:1.5px solid #e2e8f0;">
+          <thead><tr style="background:#e8f0fe;">
+            <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">번호</th>
+            <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;">문항 내용</th>
+            <th style="padding:5px 7px;text-align:left;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">영역</th>
+            <th style="padding:5px 7px;text-align:center;font-weight:700;color:#475569;font-size:9px;white-space:nowrap;">결과</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
   const printHTML = `
   <div style="font-family:'Noto Sans KR',sans-serif;width:750px;padding:20px 24px;color:#1e293b;box-sizing:border-box;">
 
@@ -1824,6 +1953,10 @@ function downloadPDF() {
       </div>
     </div>
 
+    <!-- 문항별 상세 결과 -->
+    ${pdfItemTable("receptive", "🎧 수용언어")}
+    ${pdfItemTable("expressive", "🗣️ 표현언어")}
+
     <!-- 종합 소견 -->
     <div style="background:#f8fafc;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;">
       <div style="font-weight:800;font-size:12px;margin-bottom:6px;color:#1e293b;">📋 종합 소견</div>
@@ -1866,11 +1999,25 @@ function downloadPDF() {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
       const pageW = 210, pageH = 297;
-      // 콘텐츠를 A4 한 장에 맞게 스케일 조정
-      const imgW = pageW - 10; // 좌우 여백 5mm씩
+      const imgW = pageW - 10;
       const imgH = canvas.height * (imgW / canvas.width);
-      const finalH = Math.min(imgH, pageH - 10); // 최대 A4 높이
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, 5, imgW, finalH);
+      const margin = 5;
+      let yPos = margin;
+      let remainH = imgH;
+      let srcY = 0;
+      const usableH = pageH - margin * 2;
+      while (remainH > 0) {
+        const sliceH = Math.min(remainH, usableH);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceH * (canvas.width / imgW);
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+        if (srcY > 0) pdf.addPage();
+        pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", margin, margin, imgW, sliceH);
+        srcY += sliceCanvas.height;
+        remainH -= sliceH;
+      }
       pdf.save(`SELSI_${state.childName || "결과"}_${state.examDate || "검사"}.pdf`);
       printArea.style.display = "none";
       printArea.innerHTML = "";
