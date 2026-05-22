@@ -698,22 +698,57 @@
   <div class="section-header">
     <span class="section-badge">ADULT</span>
     <h2 class="section-title">성인교육</h2>
-    <span class="section-count">3개 강의</span>
+    <span class="section-count" id="adult-count-badge">0개 강의</span>
+    <button onclick="openAdultAddModal()" style="margin-left:8px;padding:8px 18px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">
+      ＋ 항목 추가
+    </button>
   </div>
 
-  <div class="category-group">
-    <div class="category-label">만성질환 · 약물</div>
-    <div class="btn-grid">
-      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1S_S_4sDc1_LDZUQrwklrRK3tqbPGLf72l2X18-fdijU/edit?usp=sharing" target="_blank">
-        <span class="btn-num">1</span><span class="btn-label">당뇨</span><span class="btn-arrow">→</span>
-      </a>
-      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1vCPgnbiaFmndLU19XH5Sym_bRZ8KmG0emPj3H94-thQ/edit?usp=sharing" target="_blank">
-        <span class="btn-num">2</span><span class="btn-label">고혈압</span><span class="btn-arrow">→</span>
-      </a>
-      <a class="lecture-btn" href="https://docs.google.com/presentation/d/1-PF_RO3zppmXddxHh-W66hAWNnPm3OpbV7_4QSPKax4/edit?usp=sharing" target="_blank">
-        <span class="btn-num">3</span><span class="btn-label">GI약물</span><span class="btn-arrow">→</span>
-      </a>
+  <!-- 카테고리별 렌더링 영역 -->
+  <div id="adult-categories"></div>
+
+  <!-- 빈 상태 -->
+  <div id="adult-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-muted);">
+    <div style="font-size:42px;margin-bottom:12px;">📋</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:6px;">아직 강의가 없습니다</div>
+    <div style="font-size:13px;">위의 <strong>＋ 항목 추가</strong> 버튼을 눌러 첫 강의를 등록해 보세요</div>
+  </div>
+</div>
+
+<!-- ══ 성인교육 추가/편집 모달 ══ -->
+<div id="adult-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeAdultModal()">
+  <div style="background:#fff;border-radius:18px;padding:28px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,0.22);animation:fadeIn 0.2s ease;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+      <div style="font-size:17px;font-weight:800;color:var(--primary-dark);" id="adult-modal-title">📌 강의 추가</div>
+      <button onclick="closeAdultModal()" style="width:32px;height:32px;border:none;background:#f1f5f9;border-radius:8px;font-size:18px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:5px;display:block;">카테고리 *</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="adult-modal-cat" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;"></select>
+          <button onclick="toggleNewCatInput()" id="adult-newcat-toggle" style="padding:9px 12px;border:1.5px dashed var(--border);background:transparent;border-radius:10px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;white-space:nowrap;font-family:inherit;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">＋ 새 카테고리</button>
+        </div>
+        <input id="adult-modal-newcat" type="text" placeholder="새 카테고리 이름 입력 (예: 호흡기 · 감염)" style="display:none;margin-top:8px;width:100%;padding:10px 12px;border:1.5px solid var(--primary-light);border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none;">
+      </div>
+
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:5px;display:block;">강의 제목 *</label>
+        <input id="adult-modal-label" type="text" placeholder="예: 고지혈증" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--primary-light)';this.style.background='#fff'" onblur="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+      </div>
+
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:5px;display:block;">링크 URL</label>
+        <input id="adult-modal-url" type="url" placeholder="https://docs.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--primary-light)';this.style.background='#fff'" onblur="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button onclick="closeAdultModal()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">취소</button>
+      <button onclick="saveAdultItem()" id="adult-modal-save-btn" style="flex:2;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">💾 저장</button>
+    </div>
+    <div id="adult-modal-status" style="font-size:12px;text-align:center;margin-top:10px;min-height:18px;"></div>
   </div>
 </div>
 
@@ -769,6 +804,7 @@
       }
     });
     initLinks();
+    initAdult();
   });
 
   // ── Supabase 설정 ──
@@ -1016,6 +1052,240 @@
       });
     });
   }
+
+
+  // ════════════════════════════════════════
+  // 성인교육 관리 (Supabase: adult_lectures)
+  // ════════════════════════════════════════
+  let _adultItems = [];   // { id, category, label, url, sort_order }
+  let _editingAdultId = null;
+
+  async function sbAdult(path, opts = {}) {
+    const res = await fetch(SB_URL + "/rest/v1/" + path, {
+      method: opts.method || "GET",
+      headers: {
+        "apikey": SB_KEY,
+        "Authorization": "Bearer " + SB_KEY,
+        "Content-Type": "application/json",
+        "Prefer": opts.prefer !== undefined ? opts.prefer : (opts.method === "POST" ? "return=representation" : "return=minimal")
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.statusText);
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  async function initAdult() {
+    const defaults = [
+      { id: '__def1', category: '만성질환 · 약물', label: '당뇨',   url: 'https://docs.google.com/presentation/d/1S_S_4sDc1_LDZUQrwklrRK3tqbPGLf72l2X18-fdijU/edit?usp=sharing', sort_order: 0 },
+      { id: '__def2', category: '만성질환 · 약물', label: '고혈압', url: 'https://docs.google.com/presentation/d/1vCPgnbiaFmndLU19XH5Sym_bRZ8KmG0emPj3H94-thQ/edit?usp=sharing', sort_order: 1 },
+      { id: '__def3', category: '만성질환 · 약물', label: 'GI약물', url: 'https://docs.google.com/presentation/d/1-PF_RO3zppmXddxHh-W66hAWNnPm3OpbV7_4QSPKax4/edit?usp=sharing', sort_order: 2 },
+    ];
+    try {
+      const rows = await sbAdult("adult_lectures?select=*&order=category.asc,sort_order.asc,id.asc");
+      _adultItems = (rows && rows.length) ? rows : defaults;
+    } catch(e) {
+      _adultItems = defaults;
+    }
+    renderAdult();
+  }
+
+  function renderAdult() {
+    const container = document.getElementById('adult-categories');
+    const emptyEl   = document.getElementById('adult-empty');
+    const badge     = document.getElementById('adult-count-badge');
+    badge.textContent = _adultItems.length + '개 강의';
+
+    if (!_adultItems.length) {
+      container.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    // 카테고리별 그룹핑
+    const groups = {};
+    _adultItems.forEach(item => {
+      if (!groups[item.category]) groups[item.category] = [];
+      groups[item.category].push(item);
+    });
+
+    container.innerHTML = Object.entries(groups).map(([cat, items]) => `
+      <div class="category-group">
+        <div class="category-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>${cat}</span>
+          <button onclick="openAdultAddModal(this.dataset.cat)" data-cat="${cat}" style="padding:3px 10px;border:1.5px solid var(--border);background:transparent;border-radius:7px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseover="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary');this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--primary')" onmouseout="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--border');this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text-muted')">＋ 여기에 추가</button>
+        </div>
+        <div class="btn-grid">
+          ${items.map((item, idx) => {
+            const safeId = String(item.id).replace(/[^a-zA-Z0-9_\-]/g, '_');
+            const safeLabel = item.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return `<div style="position:relative;" class="adult-card-wrap" data-id="${item.id}">
+              <a class="lecture-btn" href="${item.url || '#'}" target="${item.url ? '_blank' : '_self'}" style="width:100%;${!item.url?'cursor:default;opacity:0.7;':''}" ${!item.url?'onclick="return false"':''}>
+                <span class="btn-num">${idx + 1}</span>
+                <span class="btn-label">${item.label}</span>
+                <span class="btn-arrow">→</span>
+              </a>
+              <div class="adult-card-actions" style="position:absolute;top:6px;right:6px;display:none;gap:4px;z-index:5;">
+                <button onclick="openAdultEditModal(this.closest('[data-id]').dataset.id)" title="수정" style="width:26px;height:26px;border:none;background:#dbeafe;color:#1d4ed8;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">✏️</button>
+                <button onclick="deleteAdultItem(this.closest('[data-id]').dataset.id, '${safeLabel}')" title="삭제" style="width:26px;height:26px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">🗑</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    // 카드 hover 시 액션 버튼 표시
+    container.querySelectorAll('.adult-card-wrap').forEach(wrap => {
+      const actions = wrap.querySelector('.adult-card-actions');
+      wrap.addEventListener('mouseenter', () => { actions.style.display = 'flex'; });
+      wrap.addEventListener('mouseleave', () => { actions.style.display = 'none'; });
+    });
+
+    refreshCatSelect();
+  }
+
+  function refreshCatSelect() {
+    const sel = document.getElementById('adult-modal-cat');
+    if (!sel) return;
+    const cats = [...new Set(_adultItems.map(i => i.category))];
+    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    sel.style.borderColor = 'var(--border)';
+    sel.style.borderRadius = '10px';
+    sel.style.padding = '10px 12px';
+    sel.style.fontFamily = "'Noto Sans KR', sans-serif";
+    sel.style.fontSize = '13px';
+    sel.style.color = 'var(--text)';
+    sel.style.background = 'var(--bg)';
+    sel.style.outline = 'none';
+    sel.style.border = '1.5px solid var(--border)';
+  }
+
+  function openAdultAddModal(presetCat) {
+    _editingAdultId = null;
+    document.getElementById('adult-modal-title').textContent = '📌 강의 추가';
+    document.getElementById('adult-modal-label').value = '';
+    document.getElementById('adult-modal-url').value = '';
+    document.getElementById('adult-modal-newcat').style.display = 'none';
+    document.getElementById('adult-modal-newcat').value = '';
+    document.getElementById('adult-modal-status').textContent = '';
+    refreshCatSelect();
+    if (presetCat) {
+      const sel = document.getElementById('adult-modal-cat');
+      [...sel.options].forEach(o => { if (o.value === presetCat) o.selected = true; });
+    }
+    document.getElementById('adult-modal-overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('adult-modal-label').focus(), 100);
+  }
+
+  function openAdultEditModal(id) {
+    const item = _adultItems.find(i => String(i.id) === String(id));
+    if (!item) return;
+    _editingAdultId = id;
+    document.getElementById('adult-modal-title').textContent = '✏️ 강의 수정';
+    document.getElementById('adult-modal-label').value = item.label;
+    document.getElementById('adult-modal-url').value = item.url || '';
+    document.getElementById('adult-modal-newcat').style.display = 'none';
+    document.getElementById('adult-modal-newcat').value = '';
+    document.getElementById('adult-modal-status').textContent = '';
+    refreshCatSelect();
+    const sel = document.getElementById('adult-modal-cat');
+    [...sel.options].forEach(o => { if (o.value === item.category) o.selected = true; });
+    document.getElementById('adult-modal-overlay').style.display = 'flex';
+  }
+
+  function closeAdultModal() {
+    document.getElementById('adult-modal-overlay').style.display = 'none';
+    _editingAdultId = null;
+  }
+
+  function toggleNewCatInput() {
+    const inp = document.getElementById('adult-modal-newcat');
+    const isHidden = inp.style.display === 'none' || inp.style.display === '';
+    inp.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) inp.focus();
+  }
+
+  function setAdultModalStatus(msg, color) {
+    const el = document.getElementById('adult-modal-status');
+    el.textContent = msg;
+    el.style.color = color || 'var(--text-muted)';
+  }
+
+  async function saveAdultItem() {
+    const label   = document.getElementById('adult-modal-label').value.trim();
+    const url     = document.getElementById('adult-modal-url').value.trim();
+    const newCat  = document.getElementById('adult-modal-newcat').value.trim();
+    const selCat  = document.getElementById('adult-modal-cat').value;
+    const category = newCat || selCat;
+
+    if (!label) { setAdultModalStatus('⚠️ 강의 제목을 입력해 주세요', '#dc2626'); return; }
+    if (!category) { setAdultModalStatus('⚠️ 카테고리를 선택하거나 입력해 주세요', '#dc2626'); return; }
+
+    const btn = document.getElementById('adult-modal-save-btn');
+    btn.disabled = true; btn.textContent = '저장 중...';
+    setAdultModalStatus('🔄 저장 중...');
+
+    const sortOrder = _adultItems.filter(i => i.category === category).length;
+
+    try {
+      if (_editingAdultId && !String(_editingAdultId).startsWith('__')) {
+        await sbAdult(`adult_lectures?id=eq.${_editingAdultId}`, {
+          method: 'PATCH', prefer: 'return=representation',
+          body: { category, label, url, sort_order: sortOrder }
+        });
+        const idx = _adultItems.findIndex(i => String(i.id) === String(_editingAdultId));
+        if (idx >= 0) _adultItems[idx] = { ..._adultItems[idx], category, label, url };
+      } else {
+        const inserted = await sbAdult('adult_lectures', {
+          method: 'POST', prefer: 'return=representation',
+          body: [{ category, label, url, sort_order: sortOrder }]
+        });
+        if (_editingAdultId) _adultItems = _adultItems.filter(i => String(i.id) !== String(_editingAdultId));
+        if (inserted && inserted[0]) _adultItems.push(inserted[0]);
+        else _adultItems.push({ id: '__tmp' + Date.now(), category, label, url, sort_order: sortOrder });
+      }
+      renderAdult();
+      setAdultModalStatus('✅ 저장 완료!', '#16a34a');
+      setTimeout(() => closeAdultModal(), 700);
+    } catch(e) {
+      // fallback: 로컬만 반영
+      if (_editingAdultId) {
+        const idx = _adultItems.findIndex(i => String(i.id) === String(_editingAdultId));
+        if (idx >= 0) _adultItems[idx] = { ..._adultItems[idx], category, label, url };
+        else _adultItems.push({ id: '__tmp' + Date.now(), category, label, url, sort_order: sortOrder });
+      } else {
+        _adultItems.push({ id: '__tmp' + Date.now(), category, label, url, sort_order: sortOrder });
+      }
+      renderAdult();
+      setAdultModalStatus('⚠️ DB 저장 실패 (화면에만 반영): ' + e.message, '#d97706');
+      setTimeout(() => closeAdultModal(), 1800);
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 저장';
+    }
+  }
+
+  async function deleteAdultItem(id, label) {
+    if (!confirm(`"${label}" 강의를 삭제하시겠습니까?`)) return;
+    try {
+      if (!String(id).startsWith('__')) {
+        await sbAdult(`adult_lectures?id=eq.${id}`, { method: 'DELETE', prefer: '' });
+      }
+    } catch(e) { /* local only */ }
+    _adultItems = _adultItems.filter(i => String(i.id) !== String(id));
+    renderAdult();
+  }
+
+  document.addEventListener('keydown', e => {
+    const overlay = document.getElementById('adult-modal-overlay');
+    if (!overlay || overlay.style.display !== 'flex') return;
+    if (e.key === 'Escape') closeAdultModal();
+  });
 
   async function saveLinks() {
     const btn = document.querySelector('.link-save-btn');
