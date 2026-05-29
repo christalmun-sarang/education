@@ -123,6 +123,7 @@
   /* ── Tab Content ── */
   .tab-content { display: none; padding: 32px; animation: fadeIn 0.25s ease; }
   .tab-content.active { display: block; }
+  .tab-content#tab-messenger { padding: 0; }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
@@ -483,12 +484,24 @@
 
 <!-- ── TAB NAV ── -->
 <nav class="tab-nav">
+  <button class="tab-btn" onclick="switchTab('tab-messenger', this)">💬 메신저</button>
   <button class="tab-btn active" onclick="switchTab('tab-links', this)">🔗 링크 관리</button>
   <button class="tab-btn" onclick="switchTab('tab-lecture', this)">📚 심층강의 교육</button>
   <button class="tab-btn" onclick="switchTab('tab-tab2', this)">🩺 성인교육</button>
   <button class="tab-btn" onclick="switchTab('tab-tab3', this)">🧒 SELSI 검사</button>
   <button class="tab-btn" onclick="switchTab('tab-tab4', this)">🌱 KASQ 검사</button>
 </nav>
+
+<!-- ══ TAB MESSENGER ══ -->
+<div id="tab-messenger" class="tab-content" style="padding:0;height:calc(100vh - 68px - 50px);">
+  <iframe
+    src="messenger.html"
+    id="messenger-frame"
+    style="width:100%;height:100%;border:none;display:block;"
+    allow="microphone; camera"
+    title="메신저"
+  ></iframe>
+</div>
 
 <!-- ══ TAB 0 — 링크 관리 ══ -->
 <div id="tab-links" class="tab-content active" style="padding:0;">
