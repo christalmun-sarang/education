@@ -2268,7 +2268,7 @@ function downloadPatientPDF() {
   printArea.style.left = "-9999px";
   printArea.style.display = "block";
 
-  const btn = document.querySelector("[onclick="downloadPatientPDF()"]");
+  const btn = document.querySelector("[onclick='downloadPatientPDF()']");
   const origText = btn ? btn.textContent : "";
   if (btn) { btn.textContent = "⏳ 생성 중..."; btn.disabled = true; }
 
