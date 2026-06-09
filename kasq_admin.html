@@ -3297,9 +3297,15 @@ async function saveMeasRow(sid) {
   ["ht","wt","hc","bmi"].forEach(f => {
     if (meas[f]) { const p = calcPctile(meas[f], age, sex, f); if (p !== null) meas[f + "_p"] = Math.round(p); }
   });
-  const payload = { report_data: JSON.stringify({ meas, saved_at: new Date().toISOString() }) };
   btn.textContent = "저장 중..."; btn.disabled = true; btn.style.background = "var(--slate-400)";
   try {
+    // 기존 report_data를 먼저 읽어서 meas만 업데이트 (보고서 내용 보존)
+    const existing = await sbFetch(`kasq_sessions?session_id=eq.${sid}&select=report_data`);
+    const existingRd = existing && existing[0] && existing[0].report_data
+      ? (typeof existing[0].report_data === "string" ? JSON.parse(existing[0].report_data) : existing[0].report_data)
+      : {};
+    const merged = Object.assign({}, existingRd, { meas, saved_at: new Date().toISOString() });
+    const payload = { report_data: JSON.stringify(merged) };
     await sbFetch(`kasq_sessions?session_id=eq.${sid}`, { method: "PATCH", body: payload });
     btn.textContent = "✅ 저장됨"; btn.style.background = "#16a34a"; btn.disabled = false;
     setTimeout(() => { btn.textContent = "💾 저장"; btn.style.background = "var(--primary)"; }, 2000);
