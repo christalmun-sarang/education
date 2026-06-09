@@ -2254,11 +2254,32 @@ function downloadPatientPDF() {
       <div style="font-size:12px;line-height:1.8;color:${bothOk?"#166534":"#78350f"};">${rec}</div>
     </div>
 
-    <!-- 서명란 + 주의문구 -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 6px;border-top:1.5px solid #e2e8f0;font-size:10px;color:#94a3b8;">
-      <div>검사자 서명: ____________________________</div>
-      <div style="text-align:center;font-size:9.5px;max-width:280px;line-height:1.5;">※ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
-      <div>검사일: ${examDateFmt}</div>
+    <!-- 병원 정보 + 주의문구 -->
+    <div style="margin-top:6px;border-top:2px solid #1e3a8a;">
+      <!-- 주의문구 -->
+      <div style="text-align:center;font-size:9px;color:#94a3b8;padding:6px 0 8px;line-height:1.5;">
+        ※ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.
+      </div>
+      <!-- 병원 정보 테이블 -->
+      <table style="width:100%;border-collapse:collapse;font-size:11px;border:1.5px solid #334155;">
+        <tr>
+          <td style="padding:5px 10px;font-weight:700;background:#f1f5f9;border:1px solid #cbd5e1;white-space:nowrap;width:90px;">요양기관번호</td>
+          <td style="padding:5px 10px;border:1px solid #cbd5e1;width:120px;">41341287</td>
+          <td style="padding:5px 10px;font-weight:700;background:#f1f5f9;border:1px solid #cbd5e1;white-space:nowrap;width:80px;">검진기관명</td>
+          <td style="padding:5px 10px;border:1px solid #cbd5e1;">사랑소아청소년과의원</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 10px;font-weight:700;background:#fefce8;border:1px solid #cbd5e1;white-space:nowrap;">검진일</td>
+          <td style="padding:5px 10px;background:#fefce8;border:1px solid #cbd5e1;font-weight:700;">${examDateFmt}</td>
+          <td style="padding:5px 10px;font-weight:700;background:#f1f5f9;border:1px solid #cbd5e1;white-space:nowrap;">의사</td>
+          <td style="padding:5px 10px;border:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;">문수정</span>
+            <span style="margin-left:20px;font-weight:700;color:#475569;">면허번호</span>
+            <span style="margin-left:8px;">63165</span>
+            <span style="margin-left:auto;font-size:10px;color:#94a3b8;">(서명)</span>
+          </td>
+        </tr>
+      </table>
     </div>
 
   </div>`;
