@@ -400,15 +400,19 @@
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.55); z-index: 9999;
-    align-items: center; justify-content: center;
-    padding: 20px;
+    align-items: flex-start; justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
     background: white; border-radius: 20px;
     max-width: 560px; width: 100%;
     box-shadow: 0 8px 40px rgba(0,0,0,0.25);
-    overflow: hidden; animation: modalIn 0.25s ease;
+    animation: modalIn 0.25s ease;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    margin: auto;
   }
   @keyframes modalIn {
     from { opacity:0; transform: scale(0.93) translateY(12px); }
@@ -420,7 +424,7 @@
   }
   .modal-header-title { font-size: 17px; font-weight: 800; margin-bottom: 2px; }
   .modal-header-sub { font-size: 12px; opacity: 0.8; }
-  .modal-body { padding: 20px 22px 24px; }
+  .modal-body { padding: 16px 18px 20px; }
   .modal-guide-text {
     font-size: 14px; line-height: 1.85; color: var(--slate-700);
     background: var(--slate-50); border-radius: 12px;
@@ -679,7 +683,8 @@
       <div id="resultContent"></div>
       <div class="result-btns">
         <button class="btn-secondary" onclick="goStep(2)">← 검사 수정</button>
-        <button class="btn-green" onclick="downloadPDF()">📄 PDF 결과지 저장</button>
+        <button class="btn-green" onclick="downloadPDF()">📄 의사용 PDF</button>
+        <button style="padding:10px 18px;background:#0891b2;color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="downloadPatientPDF()">🖨 환자용 출력</button>
         <button class="btn-secondary" onclick="showResultQR()" style="background:#6366f1;color:white;border-color:#6366f1;">📲 결과 QR 공유</button>
         <button class="btn-secondary" onclick="resetAll()" style="background:#fef2f2;color:#dc2626">🔄 새 검사</button>
       </div>
@@ -1298,7 +1303,8 @@ function showResultModal(r) {
           <div class="opinion-warn">⚠️ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
-          <button onclick="downloadPDF()" class="btn-green" style="flex:1;min-width:140px;">📄 PDF 결과지 저장</button>
+          <button onclick="downloadPDF()" class="btn-green" style="flex:1;min-width:140px;">📄 의사용 PDF</button>
+          <button onclick="downloadPatientPDF()" style="flex:1;min-width:140px;padding:12px;background:#0891b2;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🖨 환자용 출력</button>
           <button onclick="showResultQR()" style="flex:1;min-width:120px;padding:12px;background:#6366f1;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📲 QR 공유</button>
           <button onclick="document.getElementById('remote-result-modal').style.display='none'" class="btn-secondary">닫기</button>
         </div>
@@ -1338,6 +1344,7 @@ function openGuideModal() {
 }
 function closeGuideModal() {
   document.getElementById("guide-modal").classList.remove("open");
+  state.currentSessionId = null; // 직접 검사 시작 — 새 세션 생성 보장
   goStep(2);
 }
 
@@ -1667,6 +1674,9 @@ function renderResult() {
   const sc = calcScores();
   const rProfile = groupProfile("receptive");
   const eProfile = groupProfile("expressive");
+
+  // 직접 검사 완료 시 Supabase 자동 저장
+  saveDirectExamResult(sc);
 
   const examDateFmt = state.examDate
     ? new Date(state.examDate).toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric"})
@@ -2066,6 +2076,235 @@ function downloadPDF() {
       printArea.style.display = "none";
       btn.textContent = origText;
       btn.disabled = false;
+    });
+  }, 200);
+}
+
+// ── 직접 검사 결과 Supabase 저장 ──
+async function saveDirectExamResult(sc) {
+  if (state.currentSessionId) return; // 링크/QR 모드는 이미 저장됨
+  const sessionId = genSessionId();
+  state.currentSessionId = sessionId;
+  const age = getAge();
+  const payload = {
+    session_id:   sessionId,
+    child_name:   state.childName,
+    child_age:    age,
+    gender:       state.gender,
+    examiner:     state.examiner,
+    exam_date:    state.examDate || new Date().toISOString().split("T")[0],
+    status:       "completed",
+    answers:      state.answers,
+    completed_at: new Date().toISOString()
+  };
+  try {
+    await sbFetch("selsi_sessions", { method: "POST", body: payload });
+    console.log("직접 검사 저장 완료:", sessionId);
+  } catch(e) {
+    console.error("저장 실패:", e.message);
+    state.currentSessionId = null;
+    alert("⚠️ 결과 저장 실패: " + e.message);
+  }
+}
+
+// ── 환자용 PDF 출력 (문항 상세 제외) ──
+function downloadPatientPDF() {
+  const sc = calcScores();
+  const rProfile = groupProfile("receptive");
+  const eProfile = groupProfile("expressive");
+  const examDateFmt = state.examDate
+    ? new Date(state.examDate).toLocaleDateString("ko-KR")
+    : "-";
+
+  const interpLabel = { normal:"정상 발달", mild:"약간 지연 의심", delay:"발달 지연 의심" };
+  const interpColor = { normal:"#16a34a", mild:"#d97706", delay:"#dc2626" };
+  const interpBg    = { normal:"#f0fdf4",  mild:"#fffbeb",  delay:"#fef2f2" };
+
+  function profileRows(profile) {
+    return profile.map((p, i) => {
+      const c = p.pct >= 80 ? "#16a34a" : p.pct >= 50 ? "#d97706" : "#dc2626";
+      const bg = i % 2 === 0 ? "white" : "#fafafa";
+      return `<tr style="border-bottom:1px solid #f1f5f9;background:${bg};">
+        <td style="padding:5px 10px;font-size:11px;font-weight:600;color:#334155;">${p.label}</td>
+        <td style="padding:5px 8px;text-align:center;font-size:11px;font-weight:700;color:#475569;">${p.passed}/${p.total}</td>
+        <td style="padding:5px 10px;">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="flex:1;height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
+              <div style="width:${p.pct}%;height:100%;background:${c};border-radius:99px;"></div>
+            </div>
+            <span style="font-weight:800;color:${c};font-size:10.5px;min-width:32px;">${p.pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  function scoreBox(label, d) {
+    const c = interpColor[d.interp.cls];
+    const bg = interpBg[d.interp.cls];
+    return `
+    <div style="flex:1;border-radius:10px;border:1.5px solid ${c}50;background:${bg};padding:10px 12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-weight:800;font-size:12px;">${label}</span>
+        <span style="background:${c};color:white;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;">${interpLabel[d.interp.cls]}</span>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:7px;">
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;">${d.score}<span style="font-size:10px;color:#94a3b8;">/${d.total}</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">원점수</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;">${d.pct}<span style="font-size:10px;color:#94a3b8;">%</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">정반응률</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,0.7);border-radius:7px;padding:6px 4px;">
+          <div style="font-size:18px;font-weight:900;line-height:1;color:${c};">${d.equiv}<span style="font-size:10px;color:#94a3b8;">개월</span></div>
+          <div style="font-size:9px;color:#64748b;margin-top:2px;">등가월령</div>
+        </div>
+      </div>
+      <div style="height:5px;background:rgba(0,0,0,0.08);border-radius:99px;overflow:hidden;">
+        <div style="width:${d.pct}%;height:100%;background:${c};border-radius:99px;"></div>
+      </div>
+    </div>`;
+  }
+
+  const bothOk = sc.r.interp.cls === "normal" && sc.e.interp.cls === "normal";
+  const bothDelay = sc.r.interp.cls === "delay" && sc.e.interp.cls === "delay";
+  let opinion;
+  if (bothOk) opinion = "수용언어와 표현언어 두 영역 모두 <strong>정상 발달</strong> 범위 내에 있습니다.";
+  else if (bothDelay) opinion = "수용언어와 표현언어 <strong>두 영역 모두 발달 지연이 의심</strong>됩니다. 전문 언어치료사에 의한 정밀 평가 및 조기 중재를 권장합니다.";
+  else opinion = "일부 영역에서 발달 지연이 의심됩니다. 전문 언어치료사의 정밀 평가를 권장합니다.";
+
+  // 권고사항
+  const rec = bothOk
+    ? "현재 언어 발달은 양호합니다. 정기적인 발달 모니터링을 권장합니다."
+    : "언어치료 전문가와의 상담 및 정밀 평가를 권장합니다. 조기 발견과 조기 중재가 중요합니다.";
+
+  const printHTML = `
+  <div style="font-family:'Noto Sans KR',sans-serif;width:680px;padding:24px 28px;color:#1e293b;box-sizing:border-box;">
+
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border-radius:12px;padding:16px 22px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+      <div style="background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.35);border-radius:8px;padding:5px 14px;font-weight:900;font-size:19px;letter-spacing:3px;flex-shrink:0;">SELSI</div>
+      <div>
+        <div style="font-size:15px;font-weight:800;">영·유아 언어발달 검사 결과 안내문</div>
+        <div style="font-size:10px;opacity:0.78;margin-top:2px;">Sequenced Language Scale for Infants</div>
+      </div>
+      <div style="margin-left:auto;text-align:right;font-size:11px;opacity:0.88;line-height:1.8;">
+        검사일: ${examDateFmt}<br>검사자: ${state.examiner||"-"}
+      </div>
+    </div>
+
+    <!-- 아동 정보 + 점수 요약 -->
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:stretch;">
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 16px;flex:0 0 auto;min-width:175px;">
+        <div style="font-weight:800;font-size:11px;color:#64748b;margin-bottom:9px;text-transform:uppercase;letter-spacing:0.5px;">👶 아동 정보</div>
+        ${[["이름",state.childName||"-"],["성별",state.gender||"-"],["생활연령",sc.age+"개월 ("+Math.floor(sc.age/12)+"세 "+sc.age%12+"개월)"]].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px;gap:8px;">
+          <span style="color:#94a3b8;font-weight:600;white-space:nowrap;">${k}</span>
+          <span style="font-weight:700;color:#1e293b;text-align:right;">${v}</span>
+        </div>`).join("")}
+      </div>
+      ${scoreBox("🎧 수용언어", sc.r)}
+      ${scoreBox("🗣️ 표현언어", sc.e)}
+    </div>
+
+    <!-- 프로파일 테이블 2개 나란히 -->
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">🎧 수용언어 월령별 프로파일</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:white;border-radius:10px;overflow:hidden;border:1.5px solid #e2e8f0;">
+          <thead><tr style="background:#f1f5f9;">
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">월령 구간</th>
+            <th style="padding:6px 8px;text-align:center;font-weight:700;color:#475569;font-size:10px;">통과</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">정반응률</th>
+          </tr></thead>
+          <tbody>${profileRows(rProfile)}</tbody>
+        </table>
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:11px;color:#1e293b;margin-bottom:6px;padding-left:2px;">🗣️ 표현언어 월령별 프로파일</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:white;border-radius:10px;overflow:hidden;border:1.5px solid #e2e8f0;">
+          <thead><tr style="background:#f1f5f9;">
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">월령 구간</th>
+            <th style="padding:6px 8px;text-align:center;font-weight:700;color:#475569;font-size:10px;">통과</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:700;color:#475569;font-size:10px;">정반응률</th>
+          </tr></thead>
+          <tbody>${profileRows(eProfile)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 종합 소견 -->
+    <div style="background:#f8fafc;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:14px;">
+      <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:#1e293b;">📋 검사 결과 요약</div>
+      <div style="font-size:12px;line-height:1.9;color:#475569;">
+        <strong style="color:#1e293b;">${state.childName||"대상아동"}</strong>(생활연령 ${sc.age}개월)의 SELSI 검사 결과,
+        수용언어 등가월령 <strong style="color:#1e293b;">${sc.r.equiv}개월</strong>(정반응률 ${sc.r.pct}%,
+        <span style="color:${interpColor[sc.r.interp.cls]};font-weight:700;">${interpLabel[sc.r.interp.cls]}</span>),
+        표현언어 등가월령 <strong style="color:#1e293b;">${sc.e.equiv}개월</strong>(정반응률 ${sc.e.pct}%,
+        <span style="color:${interpColor[sc.e.interp.cls]};font-weight:700;">${interpLabel[sc.e.interp.cls]}</span>)으로 측정되었습니다.<br>
+        ${opinion}
+      </div>
+    </div>
+
+    <!-- 권고사항 -->
+    <div style="background:${bothOk?"#f0fdf4":"#fefce8"};border:1.5px solid ${bothOk?"#bbf7d0":"#fde68a"};border-radius:10px;padding:14px 18px;margin-bottom:18px;">
+      <div style="font-weight:800;font-size:12px;color:${bothOk?"#15803d":"#92400e"};margin-bottom:6px;">💡 권고사항</div>
+      <div style="font-size:12px;line-height:1.8;color:${bothOk?"#166534":"#78350f"};">${rec}</div>
+    </div>
+
+    <!-- 서명란 + 주의문구 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 6px;border-top:1.5px solid #e2e8f0;font-size:10px;color:#94a3b8;">
+      <div>검사자 서명: ____________________________</div>
+      <div style="text-align:center;font-size:9.5px;max-width:280px;line-height:1.5;">※ 본 결과는 선별검사 참고용이며, 공식적인 임상 진단 자료로 사용할 수 없습니다.</div>
+      <div>검사일: ${examDateFmt}</div>
+    </div>
+
+  </div>`;
+
+  const printArea = document.getElementById("pdf-print-area");
+  printArea.innerHTML = printHTML;
+  printArea.style.left = "-9999px";
+  printArea.style.display = "block";
+
+  const btn = document.querySelector("[onclick="downloadPatientPDF()"]");
+  const origText = btn ? btn.textContent : "";
+  if (btn) { btn.textContent = "⏳ 생성 중..."; btn.disabled = true; }
+
+  setTimeout(() => {
+    html2canvas(printArea, {
+      scale: 2, useCORS: true, logging: false,
+      backgroundColor: "#ffffff", width: 680,
+    }).then(canvas => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+      const pageW = 210, pageH = 297;
+      const imgW = pageW - 10;
+      const imgH = canvas.height * (imgW / canvas.width);
+      const margin = 5;
+      let yPos = margin, remainH = imgH, srcY = 0;
+      const usableH = pageH - margin * 2;
+      while (remainH > 0) {
+        const sliceH = Math.min(remainH, usableH);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceH * (canvas.width / imgW);
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+        if (srcY > 0) pdf.addPage();
+        pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", margin, margin, imgW, sliceH);
+        srcY += sliceCanvas.height;
+        remainH -= sliceH;
+      }
+      pdf.save(`SELSI_환자용_${state.childName || "결과"}_${state.examDate || "검사"}.pdf`);
+      printArea.style.display = "none";
+      printArea.innerHTML = "";
+      if (btn) { btn.textContent = origText; btn.disabled = false; }
+    }).catch(err => {
+      alert("PDF 생성 오류: " + err.message);
+      printArea.style.display = "none";
+      if (btn) { btn.textContent = origText; btn.disabled = false; }
     });
   }, 200);
 }
