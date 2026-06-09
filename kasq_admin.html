@@ -2801,6 +2801,7 @@ function getInterpret(score, cutoffs) {
 }
 
 function showResultDetail(session) {
+  window._currentDetailSession = session; // PDF 파일명용
   const data = KASQ_DATA[session.age_key];
   if (!data) { alert("해당 연령 데이터를 찾을 수 없습니다."); return; }
   const scores = session.scores || {};
@@ -2915,7 +2916,10 @@ async function savePDF() {
     const w = pdf.internal.pageSize.getWidth();
     const h = canvas.height * w / canvas.width;
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, w, h);
-    pdf.save(`KASQ_결과_${new Date().toISOString().slice(0,10)}.pdf`);
+    const _s = window._currentDetailSession || {};
+    const _name = (_s.child_name || '').trim() || '환자';
+    const _date = fmtDateForFilename(_s.exam_date);
+    pdf.save(`${_name}_영유아검사_${_date}.pdf`);
   } catch(e) { alert("PDF 저장 오류: " + e.message); }
 }
 
@@ -2941,6 +2945,7 @@ function switchMainTab(tab) {
 // ──────────────────────────────────────────
 function showResultSheet(session) {
   session = normalizeSession(session);
+  window._currentResultSession = session; // PDF 파일명용
   document.getElementById("session-list").closest(".card").style.display = "none";
   const el = document.getElementById("result-sheet-area");
   el.style.display = "block";
@@ -2956,7 +2961,11 @@ function closeResultSheet() {
 function printResultSheet() {
   const content = document.getElementById("result-sheet-content").innerHTML;
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const _rs = window._currentResultSession || {};
+  const _rsName = (_rs.child_name || '').trim() || '환자';
+  const _rsDate = fmtDateForFilename(_rs.exam_date);
+  const _rsTitle = `${_rsName}_영유아검사_${_rsDate}`;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${_rsTitle}</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
       body { font-family: 'Noto Sans KR', sans-serif; margin: 10mm; }
@@ -2972,6 +2981,17 @@ function printResultSheet() {
     </style></head><body>${content}</body></html>`);
   win.document.close();
   setTimeout(() => { win.focus(); win.print(); }, 500);
+}
+
+// ──────────────────────────────────────────
+// 파일명 날짜 포맷 헬퍼 (YYYYMMDD)
+// ──────────────────────────────────────────
+function fmtDateForFilename(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}${m}${dd}`;
 }
 
 // ──────────────────────────────────────────
@@ -3942,8 +3962,12 @@ function printReport() {
     else el.removeAttribute("checked");
   });
 
+  const _rp = _currentReportSession || {};
+  const _rpName = (_rp.child_name || '').trim() || '환자';
+  const _rpDate = fmtDateForFilename(_rp.exam_date);
+  const _rpTitle = `${_rpName}_영유아검사_${_rpDate}`;
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${_rpTitle}</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
       body { font-family: 'Noto Sans KR', sans-serif; margin: 8mm; font-size:11px; }
