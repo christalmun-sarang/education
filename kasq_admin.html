@@ -3410,6 +3410,8 @@ function closeReportForm() {
   document.getElementById("report-list-view").style.display = "block";
   _measData = {};
   _currentReportSession = null;
+  // 목록으로 돌아올 때 최신 데이터 자동 새로고침
+  loadReportList();
 }
 
 // ── 신체계측 탭 초기화 ──
@@ -3635,6 +3637,8 @@ async function saveReport() {
     _currentReportSession.report_data = payload.report_data;
     if (examDate) _currentReportSession.exam_date = examDate;
     btn.textContent = "✅ 저장됨";
+    // 저장 후 목록도 백그라운드에서 갱신 (목록화면 돌아갔을 때 최신 반영)
+    loadReportList();
     setTimeout(() => { btn.textContent = "💾 저장"; btn.disabled = false; }, 1500);
   } catch(e) {
     btn.textContent = "💾 저장"; btn.disabled = false;
@@ -3921,6 +3925,23 @@ function renderReportForm(session) {
 function printReport() {
   const content = document.getElementById("print-report-sheet");
   if (!content) return;
+
+  // ── 현재 DOM 입력값을 HTML 속성에 동기화 (outerHTML 복사 전 필수) ──
+  content.querySelectorAll("input[type=text], input[type=number], input[type=date]").forEach(function(el) {
+    el.setAttribute("value", el.value);
+  });
+  content.querySelectorAll("textarea").forEach(function(el) {
+    el.innerHTML = el.value;
+  });
+  content.querySelectorAll("input[type=checkbox]").forEach(function(el) {
+    if (el.checked) el.setAttribute("checked", "checked");
+    else el.removeAttribute("checked");
+  });
+  content.querySelectorAll("input[type=radio]").forEach(function(el) {
+    if (el.checked) el.setAttribute("checked", "checked");
+    else el.removeAttribute("checked");
+  });
+
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
